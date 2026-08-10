@@ -1,8 +1,8 @@
---// ── Painel de Idioma ─────────────────────────────────────────────────────
---// Seção separada do painel de conquistas: troca o preset ativo (en/es/pt-br)
---// e permite editar qualquer string da interface, uma por uma, com
---// persistência no servidor. Segue o mesmo padrão de DFrame das outras
---// janelas do addon (MakePopup + botão X) pra abrir por cima e fechar certo.
+--// Language Panel
+--// Separate section from the achievement panel: switches the active preset
+--// (en/es/pt-br) and lets you edit any interface string, one at a time, with
+--// server-side persistence. Follows the same DFrame pattern as the addon's
+--// other windows (MakePopup + X button) to open on top and close properly.
 
 DuckAch.UI = DuckAch.UI or {}
 

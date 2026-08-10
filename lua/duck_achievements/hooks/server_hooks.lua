@@ -72,8 +72,8 @@ local function setupHooks()
     if hasKillHooks then
         hook.Add("PlayerDeath", "AchievementSystem.PlayerDeath.TrackAll", function(victim, inflictor, attacker)
             local victimProfile = GetProfile(victim)
-            --// Salva killstreak ANTES do addDeath() resetar — usado pelo
-            --// TrackKillbind pra checar kill_streak_then_suicide
+            --// Saves killstreak BEFORE addDeath() resets it - used by
+            --// TrackKillbind to check kill_streak_then_suicide
             victimProfile._ksBeforeDeath = victimProfile.killstreak
             victimProfile:addDeath()
             victimProfile.pacifistSince = 0
@@ -81,9 +81,9 @@ local function setupHooks()
 
             local weapClass = IsValid(inflictor) and inflictor:GetClass() or ""
 
-            --// Só processa conquistas de kill quando o attacker é OUTRO jogador.
-            --// Suicídios (attacker == victim ou attacker inválido) são tratados
-            --// exclusivamente no hook TrackKillbind abaixo.
+            --// Only processes kill achievements when the attacker is ANOTHER player.
+            --// Suicides (attacker == victim or attacker invalid) are handled
+            --// exclusively in the TrackKillbind hook below.
             local isRealKill = IsValid(attacker) and attacker:IsPlayer() and attacker ~= victim
 
             if isRealKill then
@@ -134,7 +134,7 @@ local function setupHooks()
                     end
                 end
 
-                --// Counters de arma para sub-requisitos de multi_requirement
+                --// Weapon counters for multi_requirement sub-requirements
                 if HasAnyOfType("multi_requirement") then
                     for _, ach in ipairs(GetByType("multi_requirement")) do
                         for _, sub in ipairs(ach:getParam("requirements") or {}) do
@@ -148,7 +148,7 @@ local function setupHooks()
                     end
                 end
 
-                --// headshot_airborne: vítima no ar (não tocando o chão)
+                --// headshot_airborne: victim airborne (not touching the ground)
                 if HasAnyOfType("headshot_airborne") and victim:GetGroundEntity() == NULL then
                     for _, ach in ipairs(GetByType("headshot_airborne")) do
                         if not atkProfile:hasAchievement(ach.id) then
@@ -157,7 +157,7 @@ local function setupHooks()
                     end
                 end
 
-                --// kill_with_low_health: attacker com <= 10 HP ao matar
+                --// kill_with_low_health: attacker at <= 10 HP when getting the kill
                 if HasAnyOfType("kill_with_low_health") then
                     if attacker:Health() <= 10 then
                         for _, ach in ipairs(GetByType("kill_with_low_health")) do
@@ -168,7 +168,7 @@ local function setupHooks()
                     end
                 end
 
-                --// kill_x_loners: mais ninguém no raio ao redor da morte
+                --// kill_x_loners: no one else within radius of the death
                 if HasAnyOfType("kill_x_loners") then
                     local LONER_RADIUS_SQR = 1500 * 1500
                     local deathPos = victim:GetPos()
@@ -211,7 +211,7 @@ local function setupHooks()
                 SendProgress(attacker)
             end
 
-            --// die_by_x_entity (não depende de ser kill de outro jogador)
+            --// die_by_x_entity (doesn't depend on being killed by another player)
             for _, ach in ipairs(GetByType("die_by_x_entity")) do
                 local infClass = IsValid(inflictor) and inflictor:GetClass() or ""
                 if infClass == ach:getParam("classname") and not victimProfile:hasAchievement(ach.id) then
@@ -391,19 +391,19 @@ local function setupHooks()
         end)
     end
 
-    --// Killbind / suicídio — ÚNICO lugar que conta mortes voluntárias.
-    --// kill_streak_then_suicide é a única conquista que usa suicídio
-    --// como mecânica intencional.
+    --// Killbind / suicide - the ONLY place that counts voluntary deaths.
+    --// kill_streak_then_suicide is the only achievement that uses suicide
+    --// as an intentional mechanic.
     if HasAnyOfType("total_killbind_x") or HasAnyOfType("kill_streak_then_suicide") then
         hook.Add("PlayerDeath", "AchievementSystem.Player.TrackKillbind", function(victim, inflictor, attacker)
-            --// Só conta suicídio puro (sem outro jogador como attacker)
+            --// Only counts pure suicide (no other player as attacker)
             if IsValid(attacker) and attacker:IsPlayer() and attacker ~= victim then return end
 
             local profile   = GetProfile(victim)
-            --// _ksBeforeDeath foi salvo pelo TrackAll antes do addDeath()
-            --// Se TrackAll não rodou ainda (ordem de hooks), usa killstreak direto
+            --// _ksBeforeDeath was saved by TrackAll before addDeath()
+            --// If TrackAll hasn't run yet (hook order), use killstreak directly
             local ksAtDeath = profile._ksBeforeDeath or profile.killstreak
-            profile._ksBeforeDeath = nil  --// limpa o campo temporário
+            profile._ksBeforeDeath = nil  --// clear the temp field
 
             profile.killbindCount = profile.killbindCount + 1
 
@@ -460,9 +460,9 @@ local function setupHooks()
         end)
     end
 
-    --// ── kill_with_same_weapon: matar com a mesma arma que te matou ─────────
-    --// Guarda via NW a última arma usada pra matar o jogador; ao matar alguém,
-    --// checa se a arma bate com a que o attacker morreu por último.
+    --// kill_with_same_weapon: kill with the same weapon that killed you
+    --// Stores the last weapon that killed the player via NW; when they kill
+    --// someone, checks whether the weapon matches the one the attacker last died to.
 
     if HasAnyOfType("kill_with_same_weapon") then
         hook.Add("PlayerDeath", "AchievementSystem.PlayerDeath.TrackSameWeapon", function(victim, inflictor, attacker)
@@ -471,10 +471,10 @@ local function setupHooks()
 
             local weapClass = IsValid(inflictor) and inflictor:GetClass() or ""
 
-            --// Marca a arma que matou a vítima (pra ela usar depois pra se vingar)
+            --// Marks the weapon that killed the victim (so they can use it later for revenge)
             victim:SetNWString("DuckAch_KilledByWeapon", weapClass)
 
-            --// Checa se o attacker está matando com a arma que o matou antes
+            --// Checks whether the attacker is killing with the weapon that killed them before
             local revengeWeapon = attacker:GetNWString("DuckAch_KilledByWeapon", "")
             if revengeWeapon ~= "" and weapClass == revengeWeapon then
                 local profile = GetProfile(attacker)
@@ -487,11 +487,11 @@ local function setupHooks()
         end)
     end
 
-    --// ── survive_explosion_at_1hp: levar explosão e sobrar com 1 HP ──────────
-    --// EntityTakeDamage dispara ANTES do dano ser de fato aplicado pelo engine,
-    --// então calcular "Health() - GetDamage()" na mão não é confiável (armadura,
-    --// multiplicadores de outros addons etc podem mudar o valor final aplicado).
-    --// Em vez disso, esperamos 1 tick e lemos o Health() REAL já processado.
+    --// survive_explosion_at_1hp: take an explosion and end up at 1 HP
+    --// EntityTakeDamage fires BEFORE the damage is actually applied by the engine,
+    --// so computing "Health() - GetDamage()" by hand isn't reliable (armor,
+    --// multipliers from other addons, etc. can change the final applied value).
+    --// Instead, we wait 1 tick and read the REAL, already-processed Health().
 
     if HasAnyOfType("survive_explosion_at_1hp") then
         hook.Add("EntityTakeDamage", "AchievementSystem.Player.TrackExplosionSurvive", function(target, dmginfo)
@@ -513,14 +513,14 @@ local function setupHooks()
         end)
     end
 
-    --// ── die_by_all_present_no_retaliation: morrer pra todos sem revidar ─────
-    --// Rastreia por sessão (por vida do jogador): quais players online já te
-    --// mataram. Resetado ao causar qualquer dano a um player, ou ao morrer
-    --// pelo último jogador restante (momento de grant), ou ao respawnar.
+    --// die_by_all_present_no_retaliation: die to everyone without retaliating
+    --// Tracked per session (per player life): which online players have already
+    --// killed you. Reset when you deal any damage to a player, when you die to
+    --// the last remaining player (grant moment), or when you respawn.
 
     if HasAnyOfType("die_by_all_present_no_retaliation") then
-        --// _pacifistDeaths[steamid] = set de steamids que já mataram o jogador
-        --// _pacifistCaused[steamid] = true se causou dano (invalida a sessão)
+        --// _pacifistDeaths[steamid] = set of steamids that have already killed the player
+        --// _pacifistCaused[steamid] = true if they dealt damage (invalidates the session)
         local _pacifistDeaths = {}
         local _pacifistCaused = {}
 
@@ -539,7 +539,7 @@ local function setupHooks()
             if not IsValid(attacker) or not attacker:IsPlayer() then return end
             if attacker == target then return end
 
-            --// Se o jogador causou dano, invalida a sessão dele
+            --// If the player dealt damage, invalidate their session
             local sid = attacker:SteamID()
             if _pacifistDeaths[sid] then
                 _pacifistCaused[sid] = true
@@ -551,12 +551,12 @@ local function setupHooks()
             if not isRealKill then return end
 
             local sid = victim:SteamID()
-            if _pacifistCaused[sid] then return end  -- já causou dano, sessão inválida
+            if _pacifistCaused[sid] then return end  -- already dealt damage, session invalid
 
             _pacifistDeaths[sid] = _pacifistDeaths[sid] or {}
             _pacifistDeaths[sid][attacker:SteamID()] = true
 
-            --// Checa se todos os humanos presentes já mataram a vítima
+            --// Checks whether every human present has already killed the victim
             local humans = player.GetHumans()
             local allKilled = true
             for _, p in ipairs(humans) do
@@ -580,9 +580,9 @@ local function setupHooks()
         end)
     end
 
-    --// ── complete_rarity_x: completar 100% das conquistas de uma raridade ────
-    --// Checado no Grant — se após desbloquear uma conquista o jogador tem
-    --// todas as de determinada raridade, concede a medalha correspondente.
+    --// complete_rarity_x: complete 100% of a rarity's achievements
+    --// Checked on Grant - if after unlocking an achievement the player has
+    --// every achievement of a given rarity, grants the corresponding medal.
 
     if HasAnyOfType("complete_rarity_x") then
         hook.Add("AchievementSystem.API.OnGrant", "AchievementSystem.Player.TrackRarityComplete", function(ply, achDef, profile)
@@ -670,7 +670,7 @@ local function setupHooks()
                 local accum = _yawAccum[attacker] or 0
 
                 DuckAchLogger.debug(string.format(
-                    "[360] %s matou %s — giro acumulado: %.2f°",
+                    "[360] %s killed %s - accumulated spin: %.2f deg",
                     attacker:Nick(), victim:Nick(), accum
                 ))
 

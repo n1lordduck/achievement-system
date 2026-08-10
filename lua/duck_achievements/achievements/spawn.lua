@@ -1,11 +1,10 @@
---// ── Spawn de Entidades ────────────────────────────────────────────────────
---// Usa path do modelo (GetModel()) em vez de classname.
---// Ex: "models/props_junk/PopCan01a.mdl"
+--// Entity Spawns
+--// Uses the model path (GetModel()) instead of classname.
+--// E.g.: "models/props_junk/PopCan01a.mdl"
 --//
---// Nenhuma conquista vem pré-cadastrada neste addon (workshop-ready).
---// Cadastre as suas pelo painel Admin (STAFF PANEL > + NOVA CONQUISTA) ou
---// direto em código com DuckAch.Registry.Register({...}), como no exemplo:
---//
+--// No achievements ship pre-registered. Register your own via the admin
+--// panel or directly in code, e.g.:
+--
 -- DuckAch.Registry.Register({
 --     id          = "spawn_props_200",
 --     name        = "Prop Enjoyer",

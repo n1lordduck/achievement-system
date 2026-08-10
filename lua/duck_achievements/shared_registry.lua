@@ -65,7 +65,7 @@ function DuckAch.Registry.Remove(id)
     end
 end
 
---// Serializa todas as conquistas para enviar ao cliente (respeita secret)
+--// Serializes every achievement to send to the client (respects secret)
 function DuckAch.Registry.SerializeForPlayer(profile)
     local out = {}
     for id, ach in pairs(_byId) do

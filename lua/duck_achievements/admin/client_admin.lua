@@ -37,8 +37,8 @@ local TRIGGER_TYPES = {
 
 local RARITIES = { "common", "uncommon", "rare", "epic", "legendary", "secret" }
 
---// labelKey é resolvido em tempo real via DuckAch.L() nos pontos de uso
---// (não em cache aqui), então acompanha o idioma ativo/overrides.
+--// labelKey is resolved live via DuckAch.L() at the point of use
+--// (not cached here), so it follows the active language/overrides.
 local PARAM_FIELDS = {
     ["get_killed_by_x"]     = { { key = "steamid",  labelKey = "admin.hint.steamid_killer" } },
     ["spawn_x_entity"]      = { { key = "classname", labelKey = "admin.hint.model_path" } },
@@ -151,7 +151,7 @@ local function buildEditForm(parent, existingDef, onSave)
     local fields       = {}
     local paramEntries = {}
     local _pickedEntId = (existingDef and existingDef.params and existingDef.params.entId) or nil
-    local _reanchorSave = nil  --// setado depois que anchSave existir, usado por buildSubRequirementUI
+    local _reanchorSave = nil  --// set once anchSave exists, used by buildSubRequirementUI
 
     local function nextY(h) yOff = yOff + h end
 
@@ -197,7 +197,7 @@ local function buildEditForm(parent, existingDef, onSave)
     paramContainer:SetSize(340, 10)
     paramContainer.Paint = function() end
 
-    --// ── Estado dos sub-requisitos (apenas para triggerType = multi_requirement) ──
+    --// Sub-requirement state (only for triggerType = multi_requirement)
     --// Cada entrada: { type = "total_kills_x", params = { kills = 5000 }, label = "..." }
     local SUB_REQ_TYPES = {
         "reach_playtime_hours", "total_kills_x", "total_killbind_x",
@@ -214,7 +214,7 @@ local function buildEditForm(parent, existingDef, onSave)
     }
 
     local _subRequirements = (existingDef and existingDef.params and existingDef.params.requirements) or {}
-    --// Deep copy pra não mutar o objeto original antes de salvar
+    --// Deep copy so we don't mutate the original object before saving
     do
         local copy = {}
         for _, r in ipairs(_subRequirements) do
@@ -257,7 +257,7 @@ local function buildEditForm(parent, existingDef, onSave)
         }
     end
 
-    --// UI especial para multi_requirement: lista de sub-requisitos repetível
+    --// Special UI for multi_requirement: a repeatable list of sub-requirements
     local function buildSubRequirementUI()
         paramContainer:Clear()
         paramEntries = {}

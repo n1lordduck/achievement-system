@@ -1,7 +1,7 @@
---// ── DuckAch.Lang (servidor) ──────────────────────────────────────────────
---// Persiste o idioma ativo + overrides de string em data/, e sincroniza com
---// os clientes. Só superadmin (ou grupo listado em Config.SuperadminGroups)
---// pode alterar.
+--// DuckAch.Lang (server)
+--// Persists the active language + string overrides to data/, and syncs with
+--// clients. Only a superadmin (or a group listed in Config.SuperadminGroups)
+--// can change it.
 
 local Lang = DuckAch.Lang
 
@@ -14,11 +14,11 @@ util.AddNetworkString("DuckAch.Lang.ResetOverride")
 util.AddNetworkString("DuckAch.Lang.RequestSync")
 util.AddNetworkString("DuckAch.Lang.SetPlayerPref")
 
---// Preferência PESSOAL de cada jogador (não é persistida no servidor — o
---// client já guarda isso localmente e reenvia toda vez que entra).
+--// Each player's PERSONAL preference (not persisted on the server - the
+--// client already stores this locally and resends it every time they join).
 Lang.PlayerPrefs = Lang.PlayerPrefs or {}
 
---// Idioma efetivo pra ESTE jogador: preferência pessoal dele, senão o padrão do servidor.
+--// Effective language for THIS player: their personal preference, otherwise the server default.
 function Lang.EffectiveFor(ply)
     if IsValid(ply) then
         local pref = Lang.PlayerPrefs[ply:SteamID64()]
@@ -27,7 +27,7 @@ function Lang.EffectiveFor(ply)
     return Lang.Current
 end
 
---// Atalho: texto já traduzido no idioma pessoal de um jogador específico.
+--// Shortcut: text already translated into a specific player's personal language.
 function DuckAch.LFor(ply, key, ...)
     return Lang.GetIn(Lang.EffectiveFor(ply), key, ...)
 end
@@ -74,7 +74,7 @@ function DuckAch.Lang.LoadPersisted()
     DuckAchLogger.info("Language loaded: " .. Lang.Current)
 end
 
---// Manda o estado completo (idioma ativo + overrides) pro(s) cliente(s)
+--// Sends the full state (active language + overrides) to the client(s)
 function DuckAch.Lang.SendSync(target)
     net.Start("DuckAch.Lang.Sync")
         net.WriteString(Lang.Current)
@@ -110,7 +110,7 @@ net.Receive("DuckAch.Lang.SetActive", function(_, ply)
     DuckAch.Lang.Persist()
     DuckAch.Lang.SendSync(nil)
 
-    DuckAchLogger.info(ply:Nick() .. " mudou o idioma do addon para: " .. langcode)
+    DuckAchLogger.info(ply:Nick() .. " changed the addon's language to: " .. langcode)
 end)
 
 net.Receive("DuckAch.Lang.SetOverride", function(_, ply)
@@ -143,7 +143,7 @@ net.Receive("DuckAch.Lang.ResetOverride", function(_, ply)
     DuckAch.Lang.SendSync(nil)
 end)
 
---// Qualquer jogador pode escolher seu idioma pessoal (não precisa ser admin).
+--// Any player can pick their own personal language (doesn't need to be admin).
 net.Receive("DuckAch.Lang.SetPlayerPref", function(_, ply)
     if not IsValid(ply) then return end
 

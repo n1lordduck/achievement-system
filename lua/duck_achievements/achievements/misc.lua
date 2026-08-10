@@ -1,5 +1,15 @@
---// ── Conquistas Diversas ───────────────────────────────────────────────────
---// Nenhuma conquista vem pré-cadastrada neste addon (workshop-ready).
---// Cadastre as suas pelo painel Admin (STAFF PANEL > + NOVA CONQUISTA) ou
---// direto em código com DuckAch.Registry.Register({...}).
---// Veja API.md para a lista completa de triggerTypes disponíveis.
+--// Miscellaneous Achievements
+--// No achievements ship pre-registered. Register your own via the admin
+--// panel or directly in code, e.g.:
+--
+-- DuckAch.Registry.Register({
+--     id          = "own_all_legendary",
+--     name        = "Completionist",
+--     description = "Unlock every legendary-rarity achievement.",
+--     rarity      = "legendary",
+--     secret      = false,
+--     triggerType = "complete_rarity_x",
+--     params      = { rarity = "legendary" },
+-- })
+--
+-- See API.md for the full list of available triggerTypes.

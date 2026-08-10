@@ -23,7 +23,7 @@ local function sendThumbToPlayer(ply, url, rawBytes)
 
     local encoded = util.Base64Encode(rawBytes)
     if #encoded > 250000 then
-        DuckAchLogger.warn("Thumbnail muito grande para enviar via net: " .. url)
+        DuckAchLogger.warn("Thumbnail too large to send via net: " .. url)
         return
     end
 
@@ -31,7 +31,7 @@ local function sendThumbToPlayer(ply, url, rawBytes)
         net.WriteString(url)
         net.WriteString(encoded)
     net.Send(ply)
-    DuckAchLogger.debug("Thumbnail enviada para " .. ply:Name() .. ": " .. url)
+    DuckAchLogger.debug("Thumbnail sent to " .. ply:Name() .. ": " .. url)
 end
 
 local function downloadAndCache(url, onDone)
@@ -40,7 +40,7 @@ local function downloadAndCache(url, onDone)
             if onDone then onDone(_cache[url].rawBytes) end
             return
         end
-        --// Já baixando — encadeia callback
+        --// Already downloading - chains the callback
         table.insert(_cache[url].callbacks, onDone or function() end)
         return
     end
@@ -53,7 +53,7 @@ local function downloadAndCache(url, onDone)
         if raw and raw ~= "" then
             _cache[url].ready    = true
             _cache[url].rawBytes = raw
-            DuckAchLogger.debug("Thumbnail do disco: " .. url)
+            DuckAchLogger.debug("Thumbnail from disk: " .. url)
             for _, cb in ipairs(_cache[url].callbacks) do cb(raw) end
             _cache[url].callbacks = {}
             return
@@ -112,14 +112,14 @@ function DuckAch.Thumbnails.SendAllToPlayer(ply)
     end)
 end
 
---// Cliente pede thumbnail específica (ex: ao abrir modal)
+--// Client requests a specific thumbnail (e.g. when opening the modal)
 net.Receive("DuckAch.RequestThumbnail", function(_, ply)
     local url = net.ReadString()
     if not url or url == "" then return end
     DuckAch.Thumbnails.SendToPlayer(ply, url)
 end)
 
---// Pré-carrega todas as thumbnails conhecidas ao iniciar
+--// Preloads every known thumbnail on startup
 hook.Add("Initialize", "AchievementSystem.Thumbnails.PreloadAll", function()
     timer.Simple(2, function()
         for _, ach in pairs(DuckAch.Registry.GetAll()) do
@@ -130,7 +130,7 @@ hook.Add("Initialize", "AchievementSystem.Thumbnails.PreloadAll", function()
     end)
 end)
 
---// Quando conquista é criada/editada via admin, baixa a thumbnail nova
+--// When an achievement is created/edited via admin, downloads the new thumbnail
 hook.Add("AchievementSystem.Admin.HooksRebuild", "AchievementSystem.Thumbnails.OnRebuild", function()
     for _, ach in pairs(DuckAch.Registry.GetAll()) do
         if ach.thumbnail and ach.thumbnail ~= "" then
@@ -142,14 +142,14 @@ hook.Add("AchievementSystem.Admin.HooksRebuild", "AchievementSystem.Thumbnails.O
     end
 end)
 
---// Envia thumbnails ao jogador conectar (com delay pra não sobrecarregar o join)
+--// Sends thumbnails when the player connects (delayed to avoid overloading the join)
 hook.Add("PlayerInitialSpawn", "AchievementSystem.Thumbnails.OnJoin", function(ply)
     timer.Simple(4, function()
         DuckAch.Thumbnails.SendAllToPlayer(ply)
     end)
 end)
 
---// Aplica opt-out no NW para o servidor checar sem precisar do perfil
+--// Applies opt-out to the NW var so the server can check it without needing the profile
 hook.Add("PlayerInitialSpawn", "AchievementSystem.Thumbnails.SetOptOut", function(ply)
     timer.Simple(2.5, function()
         if not IsValid(ply) then return end

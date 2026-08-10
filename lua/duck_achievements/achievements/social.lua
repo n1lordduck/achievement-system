@@ -1,8 +1,7 @@
---// ── Social, Chat, Comportamento ──────────────────────────────────────────
---// Nenhuma conquista vem pré-cadastrada neste addon (workshop-ready).
---// Cadastre as suas pelo painel Admin (STAFF PANEL > + NOVA CONQUISTA) ou
---// direto em código com DuckAch.Registry.Register({...}), como no exemplo:
---//
+--// Social, Chat, Behavior
+--// No achievements ship pre-registered. Register your own via the admin
+--// panel or directly in code, e.g.:
+--
 -- DuckAch.Registry.Register({
 --     id          = "say_hello",
 --     name        = "Hello, World!",

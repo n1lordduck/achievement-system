@@ -52,7 +52,7 @@ end
 
 loadPins()
 
---// ── HUD: coluna de pins no canto superior esquerdo ─────────────────────────
+--// HUD: pin column in the top-left corner
 
 local PIN_X   = 14
 local PIN_Y   = 14
@@ -65,7 +65,7 @@ local function drawPinCard(x, y, achId, view, prog)
     local isMulti = view.triggerType == "multi_requirement"
     local details = (prog and prog.details) or {}
 
-    --// Linhas de conteúdo: nome + descrição (até 2 linhas) + progresso
+    --// Content lines: name + description (up to 2 lines) + progress
     local descLines = {}
     if view.description and view.description ~= "" then
         local desc = view.description
@@ -102,19 +102,19 @@ local function drawPinCard(x, y, achId, view, prog)
     surface.SetDrawColor(rarCol.r, rarCol.g, rarCol.b, 230)
     surface.DrawRect(x, y, 3, totalH)
 
-    --// Nome
+    --// Name
     local nameShort = view.name or achId
     if #nameShort > 26 then nameShort = nameShort:sub(1, 24) .. ".." end
     draw.SimpleText(nameShort, "DA_Sub", x + 10, y + 6,
         Color(235, 235, 240, 245), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 
-    --// Raridade pequena
+    --// Small rarity label
     draw.SimpleText(rar.label, "DA_Tiny", x + 10, y + 20,
         Color(rarCol.r, rarCol.g, rarCol.b, 190), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 
     local ry = y + headerH
 
-    --// Descrição (até 2 linhas)
+    --// Description (up to 2 lines)
     for _, dl in ipairs(descLines) do
         draw.SimpleText(dl, "DA_Tiny", x + 10, ry,
             Color(160, 165, 175, 200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)

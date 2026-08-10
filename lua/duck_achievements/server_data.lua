@@ -52,7 +52,7 @@ function DuckAch.Data.GetProfile(ply)
     local sid = ply:SteamID()
     if not _profiles[sid] then
         _profiles[sid] = DuckAch.PlayerProfile.new(sid)
-        DuckAchLogger.debug("Novo perfil criado: " .. sid)
+        DuckAchLogger.debug("New profile created: " .. sid)
     end
     return _profiles[sid]
 end
@@ -65,8 +65,8 @@ function DuckAch.Data.GetTotalPlayers()
     return table.Count(_profiles)
 end
 
---// Cache de contagem por achId — invalidado ao chamar Grant (ver server_api)
---// Evita O(n) scan a cada GetStats. Usa tabela sorted implicitamente por achId string.
+--// Owner-count cache per achId - invalidated when Grant is called (see server_api)
+--// Avoids an O(n) scan on every GetStats call.
 local _ownerCountCache = {}
 
 function DuckAch.Data.InvalidateOwnerCount(achId)
@@ -112,7 +112,7 @@ timer.Create("AchievementSystem.Data.AutoSave", DuckAch.Config.SaveInterval, 0, 
 end)
 
 
---// ── Comandos administrativos ───────────────────────────────────────────────
+--// Comandos administrativos
 
 concommand.Add("duckachiv_erase_all_profiles", function(ply, cmd, args)
     local isConsole = not IsValid(ply)
@@ -126,7 +126,7 @@ concommand.Add("duckachiv_erase_all_profiles", function(ply, cmd, args)
     DuckAchLogger.info(msg)
     if not isConsole then ply:ChatPrint(msg) end
 
-    --// Reenvia dados zerados pra quem está online
+    --// Resend zeroed-out data to whoever's online
     for _, p in ipairs(player.GetAll()) do
         if IsValid(p) then
             DuckAch.Net.SendFullData(p)
@@ -138,10 +138,10 @@ concommand.Add("duckachiv_erase_everything", function(ply, cmd, args)
     local isConsole = not IsValid(ply)
     if not isConsole and not ply:IsSuperAdmin() then return end
 
-    --// Apaga perfis
+    --// Erase profiles
     _profiles = {}
 
-    --// Apaga arquivos de dados
+    --// Delete data files
     local dataDir = DuckAch.Config.DataDir
     local filesToDelete = {
         dataDir .. "profiles.txt",
@@ -151,26 +151,26 @@ concommand.Add("duckachiv_erase_everything", function(ply, cmd, args)
     for _, f in ipairs(filesToDelete) do
         if file.Exists(f, "DATA") then
             file.Delete(f)
-            DuckAchLogger.info("Deletado: " .. f)
+            DuckAchLogger.info("Deleted: " .. f)
         end
     end
 
-    --// Reseta cache de contagem
+    --// Reset the owner-count cache
     _ownerCountCache = {}
 
-    --// Apaga conquistas customizadas do registry em runtime
+    --// Remove custom achievements from the registry at runtime
     for id in pairs(DuckAch.Registry.GetAll()) do
         DuckAch.Registry.Remove(id)
     end
 
-    --// Reconstrói hooks (sem conquistas, remove todos)
+    --// Rebuild hooks (no achievements left, removes all of them)
     hook.Run("AchievementSystem.Admin.HooksRebuild")
 
     local msg = "[DuckAch] Everything erased: profiles, custom achievements, marked entities."
     DuckAchLogger.info(msg)
     if not isConsole then ply:ChatPrint(msg) end
 
-    --// Reenvia dados zerados pra todos
+    --// Resend zeroed-out data to everyone
     for _, p in ipairs(player.GetAll()) do
         if IsValid(p) then
             DuckAch.Net.SendFullData(p)
@@ -178,9 +178,9 @@ concommand.Add("duckachiv_erase_everything", function(ply, cmd, args)
     end
 end)
 
---// Concede TODAS as conquistas registradas ao jogador. Útil para testar a
---// conquista get_all_achievements e validar a UI com tudo desbloqueado.
---// Restrito a superadmin, console ou in-game.
+--// Grants ALL registered achievements to the player. Useful for testing
+--// the get_all_achievements achievement and validating the UI with everything unlocked.
+--// Restricted to superadmin, console, or in-game.
 concommand.Add("duckachiv_get_all", function(ply, cmd, args)
     local isConsole = not IsValid(ply)
     if not isConsole and not ply:IsSuperAdmin() then return end

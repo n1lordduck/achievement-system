@@ -11,10 +11,10 @@ function PlayerProfile.new(steamId)
     self.kills        = 0
     self.deaths       = 0
     self.optOutCache  = false
-    self.playtime     = 0       --// segundos de playtime total
-    self.killbindCount = 0      --// total de killbinds
-    self.lastDeathTime = 0      --// CurTime() ao morrer (para respawn_after)
-    self.pacifistSince = 0      --// CurTime() quando começou o modo pacifista
+    self.playtime     = 0       --// total playtime in seconds
+    self.killbindCount = 0      --// total killbinds
+    self.lastDeathTime = 0      --// CurTime() at death (for respawn_after)
+    self.pacifistSince = 0      --// CurTime() when pacifist mode started
 
     return self
 end

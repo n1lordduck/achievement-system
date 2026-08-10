@@ -1,40 +1,40 @@
---// ── DuckAch.Lang ──────────────────────────────────────────────────────────
---// Sistema de idiomas do addon. Cobre APENAS os textos da INTERFACE (menus,
---// HUD, painel admin, chat). Conquistas custom continuam sendo cadastradas
---// pelo admin no idioma que ele quiser (não são traduzidas automaticamente).
+--// DuckAch.Lang
+--// The addon's language system. Covers ONLY the INTERFACE text (menus,
+--// HUD, admin panel, chat). Custom achievements are still registered by
+--// the admin in whatever language they want (not auto-translated).
 --//
---// Dois níveis:
---//   - Lang.Current     -> idioma PADRÃO DO SERVIDOR, definido pelo admin,
---//                         sincronizado do servidor pra todo mundo.
---//   - Lang.PlayerPref   -> idioma PESSOAL do jogador (só existe no client,
---//                         salvo localmente), tem prioridade sobre o padrão
---//                         do servidor quando o jogador escolhe um.
+--// Two levels:
+--//   - Lang.Current     -> the SERVER DEFAULT language, set by the admin,
+--//                         synced from the server to everyone.
+--//   - Lang.PlayerPref   -> the player's PERSONAL language (only exists on the
+--//                         client, saved locally), takes priority over the
+--//                         server default when the player picks one.
 --//
---// Resolução de idioma efetivo (client): PlayerPref -> Current -> Default(en)
---// Resolução de idioma efetivo (server, por jogador): via Lang.EffectiveFor(ply)
+--// Effective-language resolution (client): PlayerPref -> Current -> Default(en)
+--// Effective-language resolution (server, per player): via Lang.EffectiveFor(ply)
 --//
---// Camadas de texto (prioridade decrescente) dentro de um idioma:
---//   1. Overrides   -> editados por admin no painel, persistidos em data/
---//   2. Presets     -> traduções que vêm junto com o addon (en/es/pt-br)
---//   3. Fallback    -> preset do idioma padrão (en), depois a própria key
+--// Text layers (descending priority) within a language:
+--//   1. Overrides   -> edited by the admin in the panel, persisted to data/
+--//   2. Presets     -> translations shipped with the addon (en/es/pt-br)
+--//   3. Fallback    -> the default language's preset (en), then the key itself
 --//
---// Uso:  DuckAch.L("menu.title")
---//       DuckAch.L("menu.page_info", page, totalPages, totalCount)
+--// Usage:  DuckAch.L("menu.title")
+--//         DuckAch.L("menu.page_info", page, totalPages, totalCount)
 
 DuckAch = DuckAch or {}
 DuckAch.Lang = DuckAch.Lang or {}
 
 local Lang = DuckAch.Lang
 
-Lang.Available = { "en", "es", "pt-br" }   --// idiomas com preset embutido
-Lang.Default   = "en"                      --// padrão de fábrica: inglês
-Lang.Current   = Lang.Current or Lang.Default  --// padrão do servidor (admin)
-Lang.PlayerPref = Lang.PlayerPref or nil       --// idioma pessoal (só CLIENT)
+Lang.Available = { "en", "es", "pt-br" }   --// languages with a built-in preset
+Lang.Default   = "en"                      --// factory default: English
+Lang.Current   = Lang.Current or Lang.Default  --// server default (admin)
+Lang.PlayerPref = Lang.PlayerPref or nil       --// personal language (CLIENT only)
 
 Lang.Presets   = Lang.Presets   or {}      --// [langcode][key] = string
-Lang.Overrides = Lang.Overrides or {}      --// [langcode][key] = string (persistente)
+Lang.Overrides = Lang.Overrides or {}      --// [langcode][key] = string (persisted)
 
---// Registra (ou mescla) um bloco de traduções para um idioma.
+--// Registers (or merges) a block of translations for a language.
 function Lang.RegisterPreset(langcode, tbl)
     Lang.Presets[langcode] = Lang.Presets[langcode] or {}
     for k, v in pairs(tbl) do
@@ -49,9 +49,9 @@ function Lang.IsValidLanguage(langcode)
     return false
 end
 
---// Idioma que deve ser usado agora, nesta realm.
---// CLIENT: preferência pessoal do jogador (se escolhida) > padrão do servidor
---// SERVER: sempre o padrão do servidor (use Lang.EffectiveFor(ply) pra um jogador específico)
+--// The language that should be used right now, in this realm.
+--// CLIENT: player's personal preference (if set) > server default
+--// SERVER: always the server default (use Lang.EffectiveFor(ply) for a specific player)
 function Lang.EffectiveLanguage()
     if CLIENT and Lang.PlayerPref and Lang.IsValidLanguage(Lang.PlayerPref) then
         return Lang.PlayerPref
@@ -59,7 +59,7 @@ function Lang.EffectiveLanguage()
     return Lang.Current
 end
 
---// Todas as keys conhecidas (união de todos os presets) — usado pelo painel admin
+--// All known keys (union of every preset) - used by the admin panel
 function Lang.GetAllKeys()
     local seen, keys = {}, {}
     for _, tbl in pairs(Lang.Presets) do
@@ -74,7 +74,7 @@ function Lang.GetAllKeys()
     return keys
 end
 
---// Valor cru (sem string.format) de uma key, num idioma específico ou no efetivo.
+--// Raw value (no string.format) of a key, in a specific language or the effective one.
 function Lang.Raw(key, langcode)
     langcode = langcode or Lang.EffectiveLanguage()
 
@@ -95,8 +95,8 @@ function Lang.Raw(key, langcode)
     return nil
 end
 
---// String final, já com string.format aplicado se vararg for passado.
---// Se a key não existir em nenhum idioma, retorna "[[key]]" pra facilitar debug.
+--// Final string, already with string.format applied if varargs were passed.
+--// If the key doesn't exist in any language, returns "[[key]]" to make debugging easier.
 function Lang.Get(key, ...)
     local str = Lang.Raw(key)
     if not str then return "[[" .. tostring(key) .. "]]" end
@@ -110,8 +110,8 @@ function Lang.Get(key, ...)
     return str
 end
 
---// Igual a Get, mas forçando um idioma específico (usado pelo servidor pra
---// mandar texto já traduzido no idioma pessoal de UM jogador específico).
+--// Same as Get, but forcing a specific language (used by the server to
+--// send text already translated into ONE specific player's personal language).
 function Lang.GetIn(langcode, key, ...)
     local str = Lang.Raw(key, langcode)
     if not str then return "[[" .. tostring(key) .. "]]" end
@@ -125,12 +125,12 @@ function Lang.GetIn(langcode, key, ...)
     return str
 end
 
---// Atalho global curto
+--// Short global shortcut
 DuckAch.L = Lang.Get
 
---// ── Presets embutidos ────────────────────────────────────────────────────
---// pt-br é a tradução "original" do addon (a mesma coisa que já existia).
---// en é o idioma padrão. es é a tradução pro espanhol.
+--// Built-in presets
+--// pt-br is the addon's "original" translation (the same thing that already existed).
+--// en is the default language. es is the Spanish translation.
 
 Lang.RegisterPreset("en", {
     -- menu
@@ -236,7 +236,7 @@ Lang.RegisterPreset("en", {
     ["admin.webhook_button"]           = "DISCORD",
     ["admin.webhook_title"]            = "DISCORD WEBHOOKS",
     ["admin.webhook_add_label"]        = "Add a new webhook",
-    ["admin.webhook_url_hint"]         = "Once you save a webhook you won't be able to view its URL again — you can only activate, deactivate, or delete it.",
+    ["admin.webhook_url_hint"]         = "Once you save a webhook you won't be able to view its URL again - you can only activate, deactivate, or delete it.",
     ["admin.webhook_url_placeholder"]  = "https://discord.com/api/webhooks/...",
     ["admin.webhook_add"]              = "ADD",
     ["admin.webhook_requires_reqwest"] = "Requires the reqwest binary module on the server.",
@@ -262,7 +262,7 @@ Lang.RegisterPreset("en", {
     ["admin.lang_selector_hint"]   = "This applies to EVERY player on the server who has not picked a personal language in their own Profile.",
     ["admin.lang_current_status"]  = "The server default is currently set to: %s",
 
-    -- sub-labels de progresso (BuildProgress no servidor)
+    -- progress sub-labels (BuildProgress on the server)
     ["sublabel.reach_playtime_hours"]   = "Playtime hours",
     ["sublabel.total_kills_x"]          = "Total kills",
     ["sublabel.total_killbind_x"]       = "Killbinds used",
@@ -368,7 +368,7 @@ Lang.RegisterPreset("pt-br", {
     ["admin.webhook_button"]           = "DISCORD",
     ["admin.webhook_title"]            = "WEBHOOKS DO DISCORD",
     ["admin.webhook_add_label"]        = "Adicionar novo webhook",
-    ["admin.webhook_url_hint"]         = "Depois de salvar um webhook você não conseguirá ver a URL dele de novo — só é possível ativar, desativar ou excluir.",
+    ["admin.webhook_url_hint"]         = "Depois de salvar um webhook você não conseguirá ver a URL dele de novo - só é possível ativar, desativar ou excluir.",
     ["admin.webhook_url_placeholder"]  = "https://discord.com/api/webhooks/...",
     ["admin.webhook_add"]              = "ADICIONAR",
     ["admin.webhook_requires_reqwest"] = "Requer o módulo binário reqwest no servidor.",
@@ -499,7 +499,7 @@ Lang.RegisterPreset("es", {
     ["admin.webhook_button"]           = "DISCORD",
     ["admin.webhook_title"]            = "WEBHOOKS DE DISCORD",
     ["admin.webhook_add_label"]        = "Agregar nuevo webhook",
-    ["admin.webhook_url_hint"]         = "Después de guardar un webhook no podrás ver su URL de nuevo — solo puedes activarlo, desactivarlo o eliminarlo.",
+    ["admin.webhook_url_hint"]         = "Después de guardar un webhook no podrás ver su URL de nuevo - solo puedes activarlo, desactivarlo o eliminarlo.",
     ["admin.webhook_url_placeholder"]  = "https://discord.com/api/webhooks/...",
     ["admin.webhook_add"]              = "AGREGAR",
     ["admin.webhook_requires_reqwest"] = "Requiere el módulo binario reqwest en el servidor.",

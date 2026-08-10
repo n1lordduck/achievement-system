@@ -45,12 +45,12 @@ function DuckAch.Admin.StartEntityPicker(ply, achId)
     if not IsValid(ply) then return end
     _pickerPending[ply:SteamID()] = achId
 
-    --// Sinaliza o cliente: ele fecha os menus, equipa a toolgun e troca pra entity_picker
+    --// Signals the client: it closes its menus, equips the toolgun, and switches to entity_picker
     net.Start("DuckAch.Admin.EquipPicker")
         net.WriteString(achId)
     net.Send(ply)
 
-    --// Hook de clique da stool vem via TOOL:LeftClick → chama DuckAch_PickerSelect no server
+    --// The stool's click hook comes via TOOL:LeftClick -> calls DuckAch_PickerSelect on the server
     hook.Add("DuckAch.Admin.PickerSelected", "AchievementSystem.Admin.PickerCb_" .. ply:SteamID(), function(player, ent, entId)
         if player ~= ply then return end
 
@@ -91,8 +91,8 @@ end)
 
 DuckAch.Admin.LoadCustomAchievements()
 
---// ── Persistência de entidades marcadas no mundo ───────────────────────────
---// Salva { mapName -> { mapCreationId -> entId } } para restaurar entre restarts
+--// Persistence of world-marked entities
+--// Saves { mapName -> { mapCreationId -> entId } } to restore across restarts
 
 local markedFile = DuckAch.Config.DataDir .. "marked_entities.txt"
 local _markedEntities = {}
@@ -117,20 +117,20 @@ local function applyMarkedEntities()
     local mapData = _markedEntities[mapName]
     if not mapData then return end
 
-    --// Percorre entidades do mapa e aplica o entId salvo
+    --// Walks the map's entities and applies the saved entId
     for _, ent in ipairs(ents.GetAll()) do
         local mapId = tostring(ent:MapCreationID())
         if mapData[mapId] then
             ent:SetNWString("DuckAch_EntId", mapData[mapId])
-            DuckAchLogger.debug("EntId restaurado: " .. mapData[mapId] .. " -> " .. ent:GetClass())
+            DuckAchLogger.debug("EntId restored: " .. mapData[mapId] .. " -> " .. ent:GetClass())
         end
     end
 end
 
---// Chamado pela stool ao marcar uma entidade
+--// Called by the stool when marking an entity
 hook.Add("DuckAch.Admin.PickerSelected", "AchievementSystem.Admin.PersistEntId", function(ply, ent, entId)
     local mapId = tostring(ent:MapCreationID())
-    if mapId == "-1" then return end --// Props spawnados não têm MapCreationID, não persistem via esse sistema
+    if mapId == "-1" then return end --// Spawned props don't have a MapCreationID, they don't persist through this system
 
     local mapName = game.GetMap()
     _markedEntities[mapName] = _markedEntities[mapName] or {}

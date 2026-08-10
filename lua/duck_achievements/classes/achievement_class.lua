@@ -56,7 +56,7 @@ function Achievement:validate()
     if not self.description                  then return false, "description ausente" end
     if not DuckAch.Rarities[self.rarity]     then return false, "invalid rarity: " .. tostring(self.rarity) end
     if not self.triggerType                  then return false, "triggerType ausente" end
-    if not VALID_TYPES[self.triggerType]     then return false, "triggerType desconhecido: " .. self.triggerType end
+    if not VALID_TYPES[self.triggerType]     then return false, "unknown triggerType: " .. self.triggerType end
 
     return true
 end
@@ -71,7 +71,7 @@ function Achievement:getPublicView(playerHasIt)
             thumbnail   = nil,
             secret      = true,
             locked      = true,
-            triggerType = nil,  --// propositalmente omitido: não vaza mecânica de secretas
+            triggerType = nil,  --// intentionally omitted: doesn't leak the secret's mechanic
         }
     end
 

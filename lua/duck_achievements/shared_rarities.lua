@@ -1,5 +1,5 @@
---// Os labels não ficam fixos aqui: são resolvidos via DuckAch.L("rarity.<id>")
---// em DuckAch.GetRarity(), então acompanham o idioma ativo do servidor.
+--// Labels aren't hardcoded here: they're resolved via DuckAch.L("rarity.<id>")
+--// in DuckAch.GetRarity(), so they follow the server's active language.
 DuckAch.Rarities = {
     common = {
         id    = "common",
@@ -33,8 +33,8 @@ DuckAch.Rarities = {
     },
 }
 
---// Retorna uma tabela { id, label, color, order } com o label já traduzido
---// no idioma ativo no momento da chamada.
+--// Returns a { id, label, color, order } table with the label already translated
+--// into the language that's active at call time.
 function DuckAch.GetRarity(id)
     local base = DuckAch.Rarities[id] or DuckAch.Rarities.common
     return {

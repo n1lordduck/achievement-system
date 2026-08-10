@@ -1,9 +1,9 @@
---// ── DuckAch.Lang (cliente) ───────────────────────────────────────────────
---// Recebe o idioma PADRÃO DO SERVIDOR + overrides do servidor.
---// Guarda a preferência PESSOAL do jogador localmente (arquivo em data/,
---// no PC do próprio jogador — segue ele em qualquer servidor) e avisa o
---// servidor sobre ela (pra texto gerado server-side, tipo sub-labels de
---// progresso, também sair traduzido).
+--// DuckAch.Lang (client)
+--// Receives the SERVER DEFAULT language + overrides from the server.
+--// Stores the player's PERSONAL preference locally (a file in data/,
+--// on the player's own PC - follows them to any server) and tells the
+--// server about it (so server-generated text, like progress sub-labels,
+--// also comes out translated).
 
 local Lang = DuckAch.Lang
 local PREF_FILE = "duckach_lang_pref.txt"
@@ -37,8 +37,8 @@ local function loadPlayerPref()
 end
 loadPlayerPref()
 
---// Define (ou limpa, passando nil) o idioma PESSOAL do jogador.
---// Isso tem prioridade sobre o padrão do servidor, só nesta máquina.
+--// Sets (or clears, by passing nil) the player's PERSONAL language.
+--// This takes priority over the server default, only on this machine.
 function DuckAch.Lang.SetPlayerLanguage(langcode)
     if langcode ~= nil and not Lang.IsValidLanguage(langcode) then return end
 
@@ -65,7 +65,7 @@ hook.Add("InitPostEntity", "DuckAch.Lang.RequestSyncOnInit", function()
     end)
 end)
 
---// Helpers de envio pro painel admin (idioma PADRÃO DO SERVIDOR + strings)
+--// Send helpers for the admin panel (SERVER DEFAULT language + strings)
 function DuckAch.Lang.RequestSetActive(langcode)
     net.Start("DuckAch.Lang.SetActive")
         net.WriteString(langcode)

@@ -52,10 +52,10 @@ function DuckAch.Net.SendUnlock(ply, view)
     net.Send(ply)
 end
 
---// ── BuildProgress ──────────────────────────────────────────────────────
---// Calcula dict de progresso completo. Reutilizado pelo SendFullData e
---// pelo SendProgress leve chamado a cada kill/spawn em tempo real.
---// Conquistas secretas não desbloqueadas nunca aparecem aqui.
+--// BuildProgress
+--// Computes the full progress dict. Reused by SendFullData and by the
+--// lightweight SendProgress called on every real-time kill/spawn.
+--// Secret achievements that aren't unlocked yet never appear here.
 
 local SUB_LABEL_KEYS = {
     reach_playtime_hours   = "sublabel.reach_playtime_hours",
@@ -138,8 +138,8 @@ function DuckAch.Net.BuildProgress(profile, ply)
                 })
             end
 
-            --// Manda sempre — mesmo com 0 completos o cliente precisa dos
-            --// detalhes pra mostrar barras individuais desde o início
+            --// Always sent - even with 0 completed, the client needs the
+            --// details to show individual bars from the start
             progress[id] = {
                 current = completed,
                 needed  = #subReqs,
@@ -152,9 +152,9 @@ function DuckAch.Net.BuildProgress(profile, ply)
     return progress
 end
 
---// ── SendProgress (leve) ──────────────────────────────────────────────────
---// Envia APENAS o progresso — sem views nem stats. Chamado a cada kill/
---// spawn para manter as barras em tempo real sem sobrecarregar a rede.
+--// SendProgress (lightweight)
+--// Sends ONLY the progress - no views or stats. Called on every kill/
+--// spawn to keep the bars real-time without overloading the network.
 
 function DuckAch.Net.SendProgress(ply)
     local profile    = DuckAch.Data.GetProfile(ply)
@@ -239,10 +239,10 @@ net.Receive("DuckAch.Admin.Save", function(_, ply)
         net.WriteString(util.TableToJSON(DuckAch.Admin.GetSerializedList()))
     net.Send(ply)
 
-    --// Atualiza grid de TODOS os jogadores conectados
+    --// Refreshes the grid for ALL connected players
     for _, p in ipairs(player.GetAll()) do
         if IsValid(p) then
-            DuckAchLogger.debug("Admin.Save: enviando SendFullData para " .. p:Name())
+            DuckAchLogger.debug("Admin.Save: sending SendFullData to " .. p:Name())
             DuckAch.Net.SendFullData(p)
         end
     end
@@ -251,7 +251,7 @@ end)
 net.Receive("DuckAch.Admin.Delete", function(_, ply)
     if not isSuperAdmin(ply) then return end
     local achId = net.ReadString()
-    DuckAchLogger.debug("Admin.Delete: removendo " .. tostring(achId))
+    DuckAchLogger.debug("Admin.Delete: removing " .. tostring(achId))
     DuckAch.Registry.Remove(achId)
     DuckAch.Admin.PersistCustomAchievements()
     hook.Run("AchievementSystem.Admin.HooksRebuild")
@@ -260,10 +260,10 @@ net.Receive("DuckAch.Admin.Delete", function(_, ply)
         net.WriteString(util.TableToJSON(DuckAch.Admin.GetSerializedList()))
     net.Send(ply)
 
-    --// Atualiza grid de TODOS os jogadores conectados
+    --// Refreshes the grid for ALL connected players
     for _, p in ipairs(player.GetAll()) do
         if IsValid(p) then
-            DuckAchLogger.debug("Admin.Delete: enviando SendFullData para " .. p:Name())
+            DuckAchLogger.debug("Admin.Delete: sending SendFullData to " .. p:Name())
             DuckAch.Net.SendFullData(p)
         end
     end
@@ -339,8 +339,8 @@ hook.Add("PlayerInitialSpawn", "AchievementSystem.Net.OnSpawn", function(ply)
     end)
 end)
 
---// Reseta todos os counters e campos de progresso do perfil, preservando
---// as conquistas já desbloqueadas. Tem cooldown de 60s para evitar spam.
+--// Resets all counters and progress fields on the profile, preserving
+--// already-unlocked achievements. Has a 60s cooldown to prevent spam.
 local _resetCooldown = {}
 net.Receive("DuckAch.ResetProgress", function(_, ply)
     if not IsValid(ply) then return end
@@ -348,17 +348,17 @@ net.Receive("DuckAch.ResetProgress", function(_, ply)
     local sid = ply:SteamID()
     local now = CurTime()
     if _resetCooldown[sid] and now - _resetCooldown[sid] < 60 then
-        DuckAchLogger.warn("ResetProgress: cooldown ativo para " .. ply:Name())
+        DuckAchLogger.warn("ResetProgress: cooldown active for " .. ply:Name())
         return
     end
     _resetCooldown[sid] = now
 
     local profile = DuckAch.Data.GetProfile(ply)
 
-    --// Limpa counters (progresso de conquistas incrementais)
+    --// Clears counters (incremental achievement progress)
     profile.counters       = {}
-    --// Zera campos de progresso geral (kills, mortes, playtime, killbinds)
-    --// mas preserva unlocked (conquistas já ganhas)
+    --// Zeroes out general progress fields (kills, deaths, playtime, killbinds)
+    --// but preserves unlocked (already-earned achievements)
     profile.kills          = 0
     profile.deaths         = 0
     profile.playtime       = 0

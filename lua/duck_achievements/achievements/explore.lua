@@ -1,1 +1,13 @@
---// Nenhuma conquista vem pré-cadastrada neste addon (workshop-ready).
+--// Exploration
+--// No achievements ship pre-registered. Register your own via the admin
+--// panel or directly in code, e.g.:
+--
+-- DuckAch.Registry.Register({
+--     id          = "interact_landmark_1",
+--     name        = "Landmark Found",
+--     description = "Interact with a marked entity on the map.",
+--     rarity      = "rare",
+--     secret      = false,
+--     triggerType = "interact_with_x_entity",
+--     params      = { entId = "landmark_1" },
+-- })

@@ -2,10 +2,10 @@ TOOL.Category    = "Duck Achievements"
 TOOL.Name        = "Entity Picker"
 TOOL.Information = { { name = "left" }, { name = "right" } }
 
---// Gera um entId robusto e único para qualquer entidade:
---// Entidades de mapa usam MapCreationID (estável entre restarts).
---// Props spawnados usam hash de: tempo de spawn, entIndex, owner steamid,
---// owner name, map name hash, e posição — garante unicidade mesmo sem MapCreationID.
+--// Generates a robust, unique entId for any entity:
+--// Map entities use MapCreationID (stable across restarts).
+--// Spawned props use a hash of: spawn time, entIndex, owner steamid,
+--// owner name, map name hash, and position - guarantees uniqueness even without a MapCreationID.
 local function makeEntId(ent)
     local mapId = ent:MapCreationID()
     if mapId and mapId ~= -1 then
@@ -37,7 +37,7 @@ function TOOL:LeftClick(trace)
 
         ent:SetNWString("DuckAch_EntId", entId)
 
-        --// Cor diferente: verde = entidade de mapa (persiste), laranja = prop spawnado
+        --// Different color: green = map entity (persists), orange = spawned prop
         if isMapEnt then
             ent:SetColor(Color(80, 220, 120))
         else

@@ -25,23 +25,23 @@ net.Receive("DuckAch.SendFullData", function()
     DuckAch.Client.progress     = data.progress     or {}
     DuckAch.Client.profile      = data.profile      or {}
 
-    --// Garante campos novos no perfil local
+    --// Ensures newer fields exist on the local profile
     DuckAch.Client.profile.playtime      = DuckAch.Client.profile.playtime      or 0
     DuckAch.Client.profile.killbindCount = DuckAch.Client.profile.killbindCount or 0
 
-    --// Garante que unlocked existe e keys são string
+    --// Ensures unlocked exists and its keys are strings
     if not DuckAch.Client.profile.unlocked then
         DuckAch.Client.profile.unlocked = {}
     end
 
     DuckAchLogger.debug("SendFullData received: " .. table.Count(DuckAch.Client.achievements) .. " achievements")
     hook.Run("AchievementSystem.Client.DataReady")
-    DuckAchLogger.debug("DataReady disparado")
+    DuckAchLogger.debug("DataReady fired")
 end)
 
---// Atualização leve de progresso — chamada a cada kill/spawn sem reenviar
---// toda a estrutura de conquistas. Atualiza só DuckAch.Client.progress e
---// dispara ProgressUpdated pra repaints do card/overlay/pin ficarem em sync.
+--// Lightweight progress update - called on every kill/spawn without resending
+--// the whole achievement structure. Only updates DuckAch.Client.progress and
+--// fires ProgressUpdated so card/overlay/pin repaints stay in sync.
 net.Receive("DuckAch.SendProgress", function()
     local size = net.ReadUInt(32)
     local raw  = net.ReadData(size)
@@ -78,7 +78,7 @@ net.Receive("DuckAch.SendUnlock", function()
         }
     end
 
-    --// Limpa cache de thumbnail para forçar recarregar
+    --// Clears the thumbnail cache to force a reload
     if view.thumbnail and view.thumbnail ~= "" then
         DuckAch.Client.thumbnails[view.thumbnail] = nil
     end
@@ -91,7 +91,7 @@ net.Receive("DuckAch.SendUnlock", function()
     hook.Run("AchievementSystem.Client.OnUnlock", view)
 end)
 
---// Chat colorido: prefix dourado, "nome" branco, conquista na cor da raridade
+--// Colored chat: gold prefix, "name" in white, achievement in the rarity's color
 net.Receive("DuckAch.ChatBroadcast", function()
     local plyName  = net.ReadString()
     local achName  = net.ReadString()
@@ -155,13 +155,13 @@ function DuckAch.Client.FetchStats(achId)
     net.SendToServer()
 end
 
---// ── Sistema de thumbnails via servidor ─────────────────────────────────────
---// O servidor baixa as imagens via HTTP e manda os bytes pro cliente via net.
---// Cliente não faz nenhum request HTTP — zero dependência de GetURL ou HTML panel.
+--// Server-relayed thumbnail system
+--// The server downloads the images via HTTP and sends the bytes to the client via net.
+--// Client never makes an HTTP request itself - zero dependency on GetURL or HTML panels.
 
-local _thumbCallbacks = {}  --// url -> lista de callbacks aguardando
+local _thumbCallbacks = {}  --// url -> list of waiting callbacks
 
---// Recebe thumbnail do servidor como bytes base64
+--// Receives a thumbnail from the server as base64 bytes
 net.Receive("DuckAch.SendThumbnail", function()
     local url     = net.ReadString()
     local encoded = net.ReadString()
@@ -173,7 +173,7 @@ net.Receive("DuckAch.SendThumbnail", function()
         return
     end
 
-    --// Salva no cache local do cliente (PNG raw → arquivo temporário → Material)
+    --// Saves to the client's local cache (raw PNG -> temp file -> Material)
     local tmpPath = "duck_achievements/tmp_" .. util.CRC(url) .. ".png"
     file.CreateDir("duck_achievements")
     file.Write(tmpPath, rawBytes)
@@ -181,9 +181,9 @@ net.Receive("DuckAch.SendThumbnail", function()
     local mat = Material("data/" .. tmpPath, "noclamp smooth")
     if mat and not mat:IsError() then
         DuckAch.Client.thumbnails[url] = mat
-        DuckAchLogger.debug("Thumbnail recebida do servidor: " .. url)
+        DuckAchLogger.debug("Thumbnail received from server: " .. url)
 
-        --// Resolve callbacks pendentes
+        --// Resolves pending callbacks
         if _thumbCallbacks[url] then
             for _, cb in ipairs(_thumbCallbacks[url]) do cb(mat) end
             _thumbCallbacks[url] = nil
@@ -194,7 +194,7 @@ net.Receive("DuckAch.SendThumbnail", function()
     end
 end)
 
---// Pede thumbnail ao servidor se ainda não tiver
+--// Requests a thumbnail from the server if it doesn't have one yet
 function DuckAch.Client.GetThumbnail(url, callback)
     if not url or url == "" then if callback then callback(nil) end return end
     if DuckAch.Client.profile.optOutCache then if callback then callback(nil) end return end
@@ -205,13 +205,13 @@ function DuckAch.Client.GetThumbnail(url, callback)
         return
     end
 
-    --// Encadeia callback
+    --// Chains the callback
     if callback then
         _thumbCallbacks[url] = _thumbCallbacks[url] or {}
         table.insert(_thumbCallbacks[url], callback)
     end
 
-    --// Se já está sendo buscado (false = pendente), não manda de novo
+    --// If it's already being fetched (false = pending), don't request again
     if cached == false then return end
 
     DuckAch.Client.thumbnails[url] = false
@@ -221,7 +221,7 @@ function DuckAch.Client.GetThumbnail(url, callback)
     DuckAchLogger.debug("Requisitando thumbnail: " .. url)
 end
 
---// Retorna material do cache imediatamente (para uso em Paint)
+--// Returns the cached material immediately (for use inside Paint)
 function DuckAch.Client.GetCachedMat(url)
     if not url or url == "" then return nil end
     local m = DuckAch.Client.thumbnails[url]
