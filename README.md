@@ -9,6 +9,12 @@
 
 A full-featured achievement system for Garry's Mod. Players unlock achievements by triggering server-tracked conditions - kills, killstreaks, spawning specific entities, playtime milestones, interacting with marked world entities, and more - with real-time progress tracking, rarity tiers, and a HUD notification on unlock.
 
+## Mysterious features or weird stuff
+
+This project wasn't public originally, and had many, many changes before coming to the actual version it is right now, so stuff that might seem weird or that is "impossible to exist" in some way is pretty normal, although i tried to manually find those cases and remove them from the codebase.
+
+^ This addon was private and made for my server only, therefore there was a bunch of "ugly" workarounds so i could deliver features on time and other stuff - but they should be gone by now.
+
 ## Features
 
 - 21+ built-in trigger types (killstreaks, entity spawns, playtime, entity interaction, multi-requirement combos, and more), plus a fully in-game achievement editor for creating custom ones without touching code.
