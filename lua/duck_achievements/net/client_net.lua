@@ -34,7 +34,7 @@ net.Receive("DuckAch.SendFullData", function()
         DuckAch.Client.profile.unlocked = {}
     end
 
-    DuckAchLogger.debug("SendFullData recebido: " .. table.Count(DuckAch.Client.achievements) .. " conquistas")
+    DuckAchLogger.debug("SendFullData received: " .. table.Count(DuckAch.Client.achievements) .. " achievements")
     hook.Run("AchievementSystem.Client.DataReady")
     DuckAchLogger.debug("DataReady disparado")
 end)
@@ -169,7 +169,7 @@ net.Receive("DuckAch.SendThumbnail", function()
 
     local rawBytes = util.Base64Decode(encoded)
     if not rawBytes or rawBytes == "" then
-        DuckAchLogger.warn("Thumbnail bytes inválidos: " .. url)
+        DuckAchLogger.warn("Invalid thumbnail bytes: " .. url)
         return
     end
 
@@ -189,7 +189,7 @@ net.Receive("DuckAch.SendThumbnail", function()
             _thumbCallbacks[url] = nil
         end
     else
-        DuckAchLogger.warn("Material inválido após receber thumbnail: " .. url)
+        DuckAchLogger.warn("Invalid material after receiving thumbnail: " .. url)
         DuckAch.Client.thumbnails[url] = false
     end
 end)

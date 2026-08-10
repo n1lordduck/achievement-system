@@ -370,6 +370,6 @@ net.Receive("DuckAch.ResetProgress", function(_, ply)
     DuckAch.Data.Save()
     DuckAch.Net.SendFullData(ply)
 
-    DuckAchLogger.info("Progresso resetado para: " .. ply:Name())
-    ply:ChatPrint("[DuckAch] Progresso resetado. Suas conquistas desbloqueadas foram mantidas.")
+    DuckAchLogger.info("Progress reset for: " .. ply:Name())
+    ply:ChatPrint("[DuckAch] Progress reset. Your unlocked achievements were kept.")
 end)

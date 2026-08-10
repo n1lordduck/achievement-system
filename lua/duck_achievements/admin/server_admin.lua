@@ -25,7 +25,7 @@ function DuckAch.Admin.PersistCustomAchievements()
         file.CreateDir(DuckAch.Config.DataDir)
     end
     file.Write(customFile, util.TableToJSON(DuckAch.Admin.GetSerializedList(), true))
-    DuckAchLogger.debug("Conquistas salvas.")
+    DuckAchLogger.debug("Achievements saved.")
 end
 
 function DuckAch.Admin.LoadCustomAchievements()
@@ -37,7 +37,7 @@ function DuckAch.Admin.LoadCustomAchievements()
     for _, def in pairs(data) do
         DuckAch.Registry.Register(def)
     end
-    DuckAchLogger.info("Conquistas customizadas carregadas.")
+    DuckAchLogger.info("Custom achievements loaded.")
 end
 
 --// Inicia picker: equipa a stool no jogador e aguarda ele clicar em algo
@@ -65,7 +65,7 @@ function DuckAch.Admin.StartEntityPicker(ply, achId)
         if ach then
             ach.params.entId = entId
             DuckAch.Admin.PersistCustomAchievements()
-            ply:ChatPrint("[DuckAch Admin] Entidade '" .. entId .. "' vinculada à conquista '" .. aId .. "'!")
+            ply:ChatPrint("[DuckAch Admin] Entity '" .. entId .. "' linked to achievement '" .. aId .. "'!")
         end
 
         net.Start("DuckAch.Admin.PickerResult")
@@ -80,13 +80,13 @@ concommand.Add("duck_ach_setentid", function(ply, cmd, args)
     local entIndex = tonumber(args[1])
     local entId    = args[2]
     if not entIndex or not entId then
-        ply:ChatPrint("Uso: duck_ach_setentid <entIndex> <entId>")
+        ply:ChatPrint("Usage: duck_ach_setentid <entIndex> <entId>")
         return
     end
     local ent = Entity(entIndex)
-    if not IsValid(ent) then ply:ChatPrint("Entidade inválida.") return end
+    if not IsValid(ent) then ply:ChatPrint("Invalid entity.") return end
     ent:SetNWString("DuckAch_EntId", entId)
-    ply:ChatPrint("[DuckAch] EntId '" .. entId .. "' definido na entidade " .. entIndex)
+    ply:ChatPrint("[DuckAch] EntId '" .. entId .. "' set on entity " .. entIndex)
 end)
 
 DuckAch.Admin.LoadCustomAchievements()
@@ -102,7 +102,7 @@ local function loadMarkedEntities()
     local raw = file.Read(markedFile, "DATA")
     if not raw or raw == "" then return end
     _markedEntities = util.JSONToTable(raw) or {}
-    DuckAchLogger.info("Entidades marcadas carregadas.")
+    DuckAchLogger.info("Marked entities loaded.")
 end
 
 local function saveMarkedEntities()

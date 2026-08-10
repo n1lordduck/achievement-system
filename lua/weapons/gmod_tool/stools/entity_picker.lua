@@ -42,8 +42,8 @@ function TOOL:LeftClick(trace)
             ent:SetColor(Color(80, 220, 120))
         else
             ent:SetColor(Color(255, 160, 40))
-            ply:ChatPrint("[DuckAch] ⚠ ATENÇÃO: Este é um prop spawnado. O vínculo NÃO persiste entre restarts do servidor.")
-            ply:ChatPrint("[DuckAch] Use o addon PermaProp para torná-lo permanente antes de vincular.")
+            ply:ChatPrint("[DuckAch] WARNING: This is a spawned prop. The link will NOT persist across server restarts.")
+            ply:ChatPrint("[DuckAch] Use the PermaProp addon to make it permanent before linking.")
         end
 
         timer.Simple(2, function()
@@ -64,7 +64,7 @@ function TOOL:RightClick(trace)
     local ent = trace.Entity
     if not IsValid(ent) or not SERVER then return false end
     local entId = ent:GetNWString("DuckAch_EntId", "")
-    local msg   = entId ~= "" and ("ID: " .. entId) or "Sem ID. Clique esquerdo para definir."
+    local msg   = entId ~= "" and ("ID: " .. entId) or "No ID yet. Left click to set one."
     self:GetOwner():ChatPrint("[DuckAch] " .. msg)
     return true
 end
@@ -79,9 +79,9 @@ if CLIENT then
                 RunConsoleCommand("gmod_toolmode", "entity_picker")
                 chat.AddText(
                     Color(193, 235, 233), "[DuckAch Admin] ",
-                    Color(220, 220, 220), "Clique esquerdo na entidade → vincula à conquista ",
+                    Color(220, 220, 220), "Left click an entity to link it to achievement ",
                     Color(255, 200, 50), achId,
-                    Color(220, 220, 220), ". Direito = checar ID atual."
+                    Color(220, 220, 220), ". Right click = check current ID."
                 )
             end)
         end)
@@ -89,7 +89,7 @@ if CLIENT then
 
 
     language.Add("tool.entity_picker.name",  "Entity Picker (DuckAch)")
-    language.Add("tool.entity_picker.desc",  "Vincula entidades do mundo a conquistas.")
-    language.Add("tool.entity_picker.left",  "Seleciona e vincula à conquista pendente")
-    language.Add("tool.entity_picker.right", "Mostra o EntId atual da entidade")
+    language.Add("tool.entity_picker.desc",  "Links world entities to achievements.")
+    language.Add("tool.entity_picker.left",  "Selects and links to the pending achievement")
+    language.Add("tool.entity_picker.right", "Shows the entity's current EntId")
 end

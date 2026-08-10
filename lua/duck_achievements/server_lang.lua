@@ -51,7 +51,7 @@ function DuckAch.Lang.Persist()
     }
 
     file.Write(langFile, util.TableToJSON(data, true))
-    DuckAchLogger.debug("Configuração de idioma salva.")
+    DuckAchLogger.debug("Language configuration saved.")
 end
 
 function DuckAch.Lang.LoadPersisted()
@@ -71,7 +71,7 @@ function DuckAch.Lang.LoadPersisted()
         Lang.Overrides = data.overrides
     end
 
-    DuckAchLogger.info("Idioma carregado: " .. Lang.Current)
+    DuckAchLogger.info("Language loaded: " .. Lang.Current)
 end
 
 --// Manda o estado completo (idioma ativo + overrides) pro(s) cliente(s)

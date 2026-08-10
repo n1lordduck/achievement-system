@@ -1,5 +1,5 @@
 local PREFIX   = "[DuckAch]"
-local debugCvar = CreateConVar("duck_ach_debug", "0", FCVAR_ARCHIVE, "Ativa logs de debug do DuckAchievements")
+local debugCvar = CreateConVar("duck_ach_debug", "0", FCVAR_ARCHIVE, "Enables DuckAchievements debug logs")
 
 local Logger = {}
 
@@ -8,11 +8,11 @@ function Logger.info(msg)
 end
 
 function Logger.warn(msg)
-    MsgC(Color(255, 200, 80), PREFIX .. " AVISO: ", Color(220, 220, 220), tostring(msg) .. "\n")
+    MsgC(Color(255, 200, 80), PREFIX .. " WARNING: ", Color(220, 220, 220), tostring(msg) .. "\n")
 end
 
 function Logger.err(msg)
-    MsgC(Color(255, 80, 80), PREFIX .. " ERRO: ", Color(220, 220, 220), tostring(msg) .. "\n")
+    MsgC(Color(255, 80, 80), PREFIX .. " ERROR: ", Color(220, 220, 220), tostring(msg) .. "\n")
 end
 
 function Logger.debug(msg)
@@ -67,14 +67,14 @@ local function safeLoad(path, realm)
     end)
 
     if not ok then
-        Logger.err("Falha ao carregar '" .. path .. "': " .. tostring(err))
+        Logger.err("Failed to load '" .. path .. "': " .. tostring(err))
     else
-        Logger.debug("Carregado [" .. realm .. "]: " .. path)
+        Logger.debug("Loaded [" .. realm .. "]: " .. path)
     end
 end
 
-Logger.info("Iniciando...")
+Logger.info("Starting...")
 for _, f in ipairs(sharedFiles) do safeLoad(f, "shared") end
 for _, f in ipairs(serverFiles) do safeLoad(f, "server") end
 for _, f in ipairs(clientFiles) do safeLoad(f, "client") end
-Logger.info("Pronto! " .. (DuckAch and DuckAch.Registry and DuckAch.Registry.Count() or 0) .. " conquistas carregadas.")
+Logger.info("Ready! " .. (DuckAch and DuckAch.Registry and DuckAch.Registry.Count() or 0) .. " achievements loaded.")

@@ -724,7 +724,7 @@ local function setupHooks()
         timer.Remove("AchievementSystem.Player.PacifistTick")
 
         setupHooks()
-        DuckAchLogger.info("Hooks reconstruídos.")
+        DuckAchLogger.info("Hooks rebuilt.")
     end)
 end
 

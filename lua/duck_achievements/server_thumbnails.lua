@@ -79,7 +79,7 @@ local function downloadAndCache(url, onDone)
             _cache[url].callbacks = {}
         end,
         failed = function(reason)
-            DuckAchLogger.warn("Thumbnail falhou (" .. reason .. "): " .. url)
+            DuckAchLogger.warn("Thumbnail failed (" .. reason .. "): " .. url)
             _cache[url] = nil
         end,
     })

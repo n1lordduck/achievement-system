@@ -23,7 +23,7 @@ local function deserializeAll(raw)
     if not raw or raw == "" then return {} end
     local decompressed = util.Decompress(raw)
     if not decompressed then
-        DuckAchLogger.warn("Falha ao descomprimir dados — tentando como JSON direto")
+        DuckAchLogger.warn("Failed to decompress data, trying as raw JSON")
         decompressed = raw
     end
     return util.JSONToTable(decompressed) or {}
@@ -39,13 +39,13 @@ function DuckAch.Data.Load()
         _profiles[sid] = DuckAch.PlayerProfile.fromTable(sid, t)
     end
 
-    DuckAchLogger.info("Perfis carregados: " .. table.Count(_profiles))
+    DuckAchLogger.info("Profiles loaded: " .. table.Count(_profiles))
 end
 
 function DuckAch.Data.Save()
     ensureDir()
     file.Write(profilesFile, serializeAll())
-    DuckAchLogger.debug("Perfis salvos.")
+    DuckAchLogger.debug("Profiles saved.")
 end
 
 function DuckAch.Data.GetProfile(ply)
@@ -122,7 +122,7 @@ concommand.Add("duckachiv_erase_all_profiles", function(ply, cmd, args)
     _profiles = {}
     DuckAch.Data.Save()
 
-    local msg = "[DuckAch] Todos os perfis apagados (" .. count .. " jogadores)."
+    local msg = "[DuckAch] All profiles erased (" .. count .. " players)."
     DuckAchLogger.info(msg)
     if not isConsole then ply:ChatPrint(msg) end
 
@@ -166,7 +166,7 @@ concommand.Add("duckachiv_erase_everything", function(ply, cmd, args)
     --// Reconstrói hooks (sem conquistas, remove todos)
     hook.Run("AchievementSystem.Admin.HooksRebuild")
 
-    local msg = "[DuckAch] Tudo apagado: perfis, conquistas customizadas, entidades marcadas."
+    local msg = "[DuckAch] Everything erased: profiles, custom achievements, marked entities."
     DuckAchLogger.info(msg)
     if not isConsole then ply:ChatPrint(msg) end
 
@@ -189,7 +189,7 @@ concommand.Add("duckachiv_get_all", function(ply, cmd, args)
     if isConsole then
         local name = args[1]
         if not name then
-            DuckAchLogger.warn("Uso: duckachiv_get_all <nome_do_jogador> (no console) ou execute in-game para si mesmo")
+            DuckAchLogger.warn("Usage: duckachiv_get_all <player_name> (console) or run in-game to target yourself")
             return
         end
         for _, p in ipairs(player.GetAll()) do
@@ -199,7 +199,7 @@ concommand.Add("duckachiv_get_all", function(ply, cmd, args)
             end
         end
         if not IsValid(targetPly) then
-            DuckAchLogger.warn("Jogador não encontrado: " .. name)
+            DuckAchLogger.warn("Player not found: " .. name)
             return
         end
     end
@@ -213,7 +213,7 @@ concommand.Add("duckachiv_get_all", function(ply, cmd, args)
         end
     end
 
-    local msg = "[DuckAch] " .. granted .. " conquista(s) concedida(s) a " .. targetPly:Name() .. "."
+    local msg = "[DuckAch] " .. granted .. " achievement(s) granted to " .. targetPly:Name() .. "."
     DuckAchLogger.info(msg)
     if not isConsole then ply:ChatPrint(msg) end
 end)

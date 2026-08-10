@@ -6,12 +6,12 @@ local _byType = {}
 function DuckAch.Registry.Register(def)
     local ach, err = DuckAch.Achievement.new(def)
     if not ach then
-        DuckAchLogger.warn("Conquista inválida '" .. tostring(def.id) .. "': " .. tostring(err))
+        DuckAchLogger.warn("Invalid achievement '" .. tostring(def.id) .. "': " .. tostring(err))
         return false
     end
 
     if _byId[ach.id] then
-        DuckAchLogger.warn("Conquista duplicada ignorada: " .. ach.id)
+        DuckAchLogger.warn("Duplicate achievement ignored: " .. ach.id)
         return false
     end
 

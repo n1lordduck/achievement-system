@@ -54,7 +54,7 @@ function Achievement:validate()
     if not self.id or self.id == ""          then return false, "id ausente" end
     if not self.name or self.name == ""      then return false, "name ausente" end
     if not self.description                  then return false, "description ausente" end
-    if not DuckAch.Rarities[self.rarity]     then return false, "rarity inválida: " .. tostring(self.rarity) end
+    if not DuckAch.Rarities[self.rarity]     then return false, "invalid rarity: " .. tostring(self.rarity) end
     if not self.triggerType                  then return false, "triggerType ausente" end
     if not VALID_TYPES[self.triggerType]     then return false, "triggerType desconhecido: " .. self.triggerType end
 
@@ -66,7 +66,7 @@ function Achievement:getPublicView(playerHasIt)
         return {
             id          = self.id,
             name        = "???",
-            description = "Conquista secreta. Descubra como desbloqueá-la.",
+            description = "Secret achievement. Figure out how to unlock it.",
             rarity      = self.rarity,
             thumbnail   = nil,
             secret      = true,

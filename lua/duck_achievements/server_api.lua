@@ -128,7 +128,7 @@ function DuckAch.API.WebhookSend(ply, achId)
     local rarity = DuckAch.GetRarity(achDef.rarity)
 
     local achName = achDef.secret and "???" or achDef.name
-    local achDesc = achDef.secret and "Conquista Secreta" or (achDef.description or "")
+    local achDesc = achDef.secret and "Secret Achievement" or (achDef.description or "")
 
     local color = 0xA0A0A0
 
@@ -139,12 +139,12 @@ function DuckAch.API.WebhookSend(ply, achId)
     end
 
     local embed = {
-        title = "🏆 Conquista Desbloqueada: " .. achName,
+        title = "🏆 Achievement Unlocked: " .. achName,
         description =
-            "**Jogador:** " .. ply:Nick() .. "\n" ..
+            "**Player:** " .. ply:Nick() .. "\n" ..
             "** *" .. achDesc .. "***\n" ..
-            "**Raridade:** " .. rarity.label .. "\n" ..
-            "**Obtida por:** " .. pct .. "% dos jogadores",
+            "**Rarity:** " .. rarity.label .. "\n" ..
+            "**Owned by:** " .. pct .. "% of players",
         color = color,
         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
@@ -163,7 +163,7 @@ function DuckAch.API.WebhookSend(ply, achId)
             },
             body = body,
             failed = function(err)
-                DuckAchLogger.error("Webhook falhou (" .. hookId .. "): " .. tostring(err))
+                DuckAchLogger.err("Webhook failed (" .. hookId .. "): " .. tostring(err))
             end
         })
     end
@@ -177,14 +177,14 @@ function DuckAch.API.Grant(ply, achId)
 
     local achDef = DuckAch.Registry.Get(achId)
     if not achDef then
-        DuckAchLogger.warn("Grant: conquista inexistente: " .. tostring(achId))
+        DuckAchLogger.warn("Grant: nonexistent achievement: " .. tostring(achId))
         return false
     end
 
     local profile = DuckAch.Data.GetProfile(ply)
     if not profile:unlock(achId) then return false end
 
-    DuckAchLogger.info(ply:Name() .. " desbloqueou: " .. achId)
+    DuckAchLogger.info(ply:Name() .. " unlocked: " .. achId)
 
     local totalPlayers = DuckAch.Data.GetTotalPlayers()
     local ownerCount   = DuckAch.Data.GetAchievementOwnerCount(achId)

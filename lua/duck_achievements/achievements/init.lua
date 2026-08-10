@@ -12,4 +12,4 @@ for _, f in ipairs(achFiles) do
     include(f)
 end
 
-DuckAchLogger.info("Conquistas definidas: " .. DuckAch.Registry.Count())
+DuckAchLogger.info("Achievements defined: " .. DuckAch.Registry.Count())

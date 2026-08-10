@@ -4,7 +4,7 @@ DuckAch.Config = {
     DataDir              = "duck_achievements/",
     SaveInterval         = 300,
 
-    ChatPrefix           = "[Conquistas]",
+    ChatPrefix           = "[Achievements]",
 
     NotifDuration        = 6,
     NotifSlideTime       = 0.35,
