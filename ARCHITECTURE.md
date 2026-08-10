@@ -20,6 +20,7 @@ SERVER only
   server_lang.lua              -- persists active language + overrides, syncs to clients
   server_data.lua              -- profiles.txt persistence, owner-count cache, erase/get-all concommands
   server_api.lua               -- DuckAch.API: Grant/HasAchievement/GetStats/TriggerInteract
+                                -- DuckAch.Webhooks: internal, admin-panel-only (not an extension point)
   server_thumbnails.lua        -- server-side HTTP fetch + cache + relay of achievement thumbnails
   net/server_net.lua           -- DuckAch.Net: SendFullData/SendProgress, all net.Receive handlers
   hooks/server_hooks.lua       -- one hook per trigger-type family, registered only if in use
@@ -139,11 +140,13 @@ The chat command itself is localized - `chat.command` is a normal lang key (`"ac
 
 ## Discord webhook integration
 
-Optional, opt-in, supports multiple simultaneous webhooks. Requires the [reqwest](https://github.com/williamvenner/gmsv_reqwest) binary module server-side. `server_api.lua` calls `pcall(require, "reqwest")` once at load - a binary module dropped into `lua/bin/` doesn't auto-populate the `reqwest` global the way a normal Lua file does via `include()`, it has to be explicitly `require()`'d, so this call is what actually makes the module usable. `DuckAch.API.IsReqwestAvailable()` reports whether that succeeded; `WebhookSend` checks it before every send and logs a warning (rather than erroring) if it's missing. The admin panel's webhook card list also surfaces this to superadmins directly: a red warning banner in the "DISCORD" popup when the module isn't loaded, plus a one-time popup when a webhook is added while it's still missing - so servers without the module get told, not just silently skipped.
+Optional, opt-in, supports multiple simultaneous webhooks. Requires the [reqwest](https://github.com/williamvenner/gmsv_reqwest) binary module server-side. `server_api.lua` calls `pcall(require, "reqwest")` once at load - a binary module dropped into `lua/bin/` doesn't auto-populate the `reqwest` global the way a normal Lua file does via `include()`, it has to be explicitly `require()`'d, so this call is what actually makes the module usable. `DuckAch.Webhooks.IsReqwestAvailable()` reports whether that succeeded; `DuckAch.Webhooks.Send` checks it before every send and logs a warning (rather than erroring) if it's missing. The admin panel's webhook card list also surfaces this to superadmins directly: a red warning banner in the "DISCORD" popup when the module isn't loaded, plus a one-time popup when a webhook is added while it's still missing - so servers without the module get told, not just silently skipped.
+
+Webhook management (`Add`/`Remove`/`SetEnabled`/`GetList`/`Send`/`IsReqwestAvailable`) lives in `DuckAch.Webhooks`, not `DuckAch.API` - unlike `DuckAch.API`, this is internal to the addon's own admin panel (`net/server_net.lua`) and isn't part of the supported extension surface for other addons to call.
 
 Configuration happens entirely through `!achmin` → the "DISCORD" button in the top bar, which opens a card-list panel: an "add webhook" field at the top, and one card per configured webhook below. Each card shows whether it's active, who added it (Steam name + SteamID64), and exactly when (date and time down to the second), with its own activate/deactivate and delete controls. A webhook's URL is treated as a secret and is **never sent back to any client once saved, including the superadmin who added it** - the `DuckAch.Admin.Webhook.List` net message that populates the cards only ever carries `id`, `enabled`, `createdByNick`, `createdBySteamID`, `createdAt`, never `url`. There's no code path, server or client, that reads a stored URL back out over the network; if you need to change one, delete it and add a new one.
 
-Every currently-enabled entry gets its own POST when an achievement unlocks - `WebhookSend` iterates the enabled subset and fires one `reqwest` call per destination.
+Every currently-enabled entry gets its own POST when an achievement unlocks - `DuckAch.Webhooks.Send` iterates the enabled subset and fires one `reqwest` call per destination.
 
 Persistence is a single JSON array at `data/duck_achievements/webhooks.json`, outside the addon's own `lua/` folder so it can never end up in this repository regardless of git history. Each entry:
 
