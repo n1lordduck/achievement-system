@@ -139,18 +139,23 @@ The chat command itself is localized — `chat.command` is a normal lang key (`"
 
 ## Discord webhook integration
 
-Optional, opt-in, off by default (`Config.WebhookEnabledDefault = false`). Requires the **reqwest** binary module server-side — `DuckAch.API.WebhookSend` checks for the global `reqwest` function and logs a warning (rather than erroring) if it's missing, so servers without the module just silently don't get this feature.
+Optional, opt-in, supports multiple simultaneous webhooks. Requires the [reqwest](https://github.com/williamvenner/gmsv_reqwest) binary module server-side — `DuckAch.API.WebhookSend` checks for the global `reqwest` function and logs a warning (rather than erroring) if it's missing, so servers without the module just silently don't get this feature.
 
-The webhook URL is treated as a secret and is **never sent to any client, including the superadmin who set it**. Configuration happens entirely through `!achmin` → the "DISCORD" button in the top bar, which opens a small panel with an enable/disable checkbox and a write-only URL field — submitting a new URL or clearing it triggers a `net.Receive("DuckAch.Admin.Webhook.Status")` push back to that client containing only two booleans (`enabled`, `configured`), never the URL itself. There is no code path, server or client, that reads the stored URL back out over the network.
+Configuration happens entirely through `!achmin` → the "DISCORD" button in the top bar, which opens a card-list panel: an "add webhook" field at the top, and one card per configured webhook below. Each card shows whether it's active, who added it (Steam name + SteamID64), and exactly when (date and time down to the second), with its own activate/deactivate and delete controls. A webhook's URL is treated as a secret and is **never sent back to any client once saved, including the superadmin who added it** — the `DuckAch.Admin.Webhook.List` net message that populates the cards only ever carries `id`, `enabled`, `createdByNick`, `createdBySteamID`, `createdAt`, never `url`. There's no code path, server or client, that reads a stored URL back out over the network; if you need to change one, delete it and add a new one.
 
-Persistence is split across two files in `data/duck_achievements/`, both outside the addon's own `lua/` folder so they can never end up in this repository regardless of git history:
+Every currently-enabled entry gets its own POST when an achievement unlocks — `WebhookSend` iterates the enabled subset and fires one `reqwest` call per destination.
 
-| File | Contents |
+Persistence is a single JSON array at `data/duck_achievements/webhooks.json`, outside the addon's own `lua/` folder so it can never end up in this repository regardless of git history. Each entry:
+
+| Field | Contents |
 |---|---|
-| `webhook.txt` | the raw webhook URL. Validated on write against `^https://discord%.com/api/webhooks/` / `^https://discordapp%.com/api/webhooks/` before being accepted. |
-| `webhook_state.txt` | `"1"` or `"0"` — whether sending is currently enabled. Not sensitive, safe to sync. |
+| `id` | generated on add (`"wh_" .. os.time() .. "_" .. random`), used to target activate/deactivate/delete actions. |
+| `url` | the raw webhook URL. Validated on add against `^https://discord%.com/api/webhooks/` / `^https://discordapp%.com/api/webhooks/`. Never leaves the server after this. |
+| `enabled` | per-entry on/off switch. |
+| `createdByNick` / `createdBySteamID` | who added it. |
+| `createdAt` | `os.time()` at the moment it was added. |
 
-If you're setting this up fresh: create a webhook in your Discord channel's integration settings, then paste the URL into `!achmin` → DISCORD. There is intentionally no way to retrieve it again through the UI once saved — if you lose it, generate a new one in Discord and paste that instead.
+If you're setting this up fresh: create a webhook in your Discord channel's integration settings, then paste the URL into `!achmin` → DISCORD → the add field. There is intentionally no way to view a saved URL again through the UI — if you need to rotate it, delete the card and add the new one.
 
 ## Extension points for other addons
 

@@ -23,10 +23,10 @@ addNetwork("DuckAch.OpenAdmin")
 addNetwork("DuckAch_Banner")
 addNetwork("DuckAch.ResetProgress")
 addNetwork("DuckAch.SendProgress")
-addNetwork("DuckAch.Admin.Webhook.RequestStatus")
-addNetwork("DuckAch.Admin.Webhook.Status")
-addNetwork("DuckAch.Admin.Webhook.SetURL")
-addNetwork("DuckAch.Admin.Webhook.Clear")
+addNetwork("DuckAch.Admin.Webhook.RequestList")
+addNetwork("DuckAch.Admin.Webhook.List")
+addNetwork("DuckAch.Admin.Webhook.Add")
+addNetwork("DuckAch.Admin.Webhook.Remove")
 addNetwork("DuckAch.Admin.Webhook.SetEnabled")
 addNetwork("DuckAch.Admin.Webhook.ActionResult")
 
@@ -283,11 +283,17 @@ net.Receive("DuckAch.Admin.SetEntId", function(_, ply)
     DuckAch.Admin.StartEntityPicker(ply, achId)
 end)
 
-local function sendWebhookStatus(ply)
-    local status = DuckAch.API.GetWebhookStatus()
-    net.Start("DuckAch.Admin.Webhook.Status")
-        net.WriteBool(status.enabled)
-        net.WriteBool(status.configured)
+local function sendWebhookList(ply)
+    local list = DuckAch.API.GetWebhookList()
+    net.Start("DuckAch.Admin.Webhook.List")
+        net.WriteUInt(#list, 16)
+        for _, wh in ipairs(list) do
+            net.WriteString(wh.id)
+            net.WriteBool(wh.enabled)
+            net.WriteString(wh.createdByNick or "")
+            net.WriteString(wh.createdBySteamID or "")
+            net.WriteUInt(wh.createdAt or 0, 32)
+        end
     net.Send(ply)
 end
 
@@ -296,32 +302,34 @@ local function sendWebhookResult(ply, ok, err)
         net.WriteBool(ok)
         net.WriteString(err or "")
     net.Send(ply)
-    sendWebhookStatus(ply)
+    sendWebhookList(ply)
 end
 
-net.Receive("DuckAch.Admin.Webhook.RequestStatus", function(_, ply)
+net.Receive("DuckAch.Admin.Webhook.RequestList", function(_, ply)
     if not isSuperAdmin(ply) then return end
-    sendWebhookStatus(ply)
+    sendWebhookList(ply)
 end)
 
-net.Receive("DuckAch.Admin.Webhook.SetURL", function(_, ply)
+net.Receive("DuckAch.Admin.Webhook.Add", function(_, ply)
     if not isSuperAdmin(ply) then return end
     local url = net.ReadString()
-    local ok, err = DuckAch.API.SetWebhookURL(url)
+    local ok, err = DuckAch.API.AddWebhook(ply, url)
     sendWebhookResult(ply, ok, err)
 end)
 
-net.Receive("DuckAch.Admin.Webhook.Clear", function(_, ply)
+net.Receive("DuckAch.Admin.Webhook.Remove", function(_, ply)
     if not isSuperAdmin(ply) then return end
-    DuckAch.API.ClearWebhookURL()
-    sendWebhookResult(ply, true)
+    local id = net.ReadString()
+    local ok, err = DuckAch.API.RemoveWebhook(id)
+    sendWebhookResult(ply, ok, err)
 end)
 
 net.Receive("DuckAch.Admin.Webhook.SetEnabled", function(_, ply)
     if not isSuperAdmin(ply) then return end
+    local id    = net.ReadString()
     local state = net.ReadBool()
-    DuckAch.API.SetWebhookEnabled(state)
-    sendWebhookResult(ply, true)
+    local ok, err = DuckAch.API.SetWebhookEnabled(id, state)
+    sendWebhookResult(ply, ok, err)
 end)
 
 hook.Add("PlayerInitialSpawn", "AchievementSystem.Net.OnSpawn", function(ply)

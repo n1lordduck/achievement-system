@@ -22,7 +22,5 @@ DuckAch.Config = {
 
     SuperadminGroups     = { "superadmin", "gerente" },
     MaxStoredNotifs      = 3,
-
-    WebhookEnabledDefault = false,
 }
 

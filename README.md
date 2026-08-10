@@ -18,7 +18,7 @@ A full-featured achievement system for Garry's Mod. Players unlock achievements 
 - Full multi-language support (English, Portuguese, Spanish out of the box) with three-tier resolution: per-key admin override, then shipped translation, then English fallback. Players can also set a personal language preference that persists across servers and always wins over the server default.
 - Pinned achievements — right-click any locked achievement to keep a persistent progress tracker on your HUD.
 - Achievement grid with search, rarity/state filters, and pagination.
-- Optional Discord webhook integration — post an embed to a channel whenever someone unlocks an achievement. Configured entirely in-game (`!achmin` → DISCORD); the webhook URL is write-only once saved and is never sent back to any client, including the admin who set it. Requires the `reqwest` binary module on the server; the feature is off by default and simply no-ops if the module isn't installed.
+- Optional Discord webhook integration, with support for multiple webhooks at once — post an embed to one or more channels whenever someone unlocks an achievement. Configured entirely in-game (`!achmin` -> DISCORD) as a card list showing who added each webhook and when; once saved, a webhook's URL can't be viewed again, only activated, deactivated, or deleted. Requires the [reqwest](https://github.com/williamvenner/gmsv_reqwest) binary module on the server; the feature is off by default and simply no-ops if the module isn't installed.
 
 ## Installation
 
@@ -33,7 +33,7 @@ git clone https://github.com/n1lordduck/achievement-system.git garrysmod/addons/
 - `!achievements` (the exact command is per-language and admin-configurable) opens the achievement grid.
 - `!achmin` (superadmin only) opens the achievement editor, including the Discord webhook settings.
 - `duck_ach_debug 1` in the server console enables debug logging.
-- The Discord webhook feature needs the `reqwest` binary module installed server-side. Everything else works without it.
+- The Discord webhook feature needs the [reqwest](https://github.com/williamvenner/gmsv_reqwest) binary module installed server-side. Everything else works without it.
 
 See [API.md](./API.md) for the full public API (`DuckAch.API`, hooks, achievement definition format) and [ARCHITECTURE.md](./ARCHITECTURE.md) for how the addon is structured internally.
 

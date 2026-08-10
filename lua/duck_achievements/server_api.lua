@@ -19,24 +19,10 @@ local function buildNotifPayload(achDef, pct)
     return view
 end
 
-local WEBHOOK_URL_FILE   = cfg.DataDir .. "webhook.txt"
-local WEBHOOK_STATE_FILE = cfg.DataDir .. "webhook_state.txt"
+local WEBHOOKS_FILE = cfg.DataDir .. "webhooks.json"
 
 local function ensureDataDir()
     if not file.IsDir(cfg.DataDir, "DATA") then file.CreateDir(cfg.DataDir) end
-end
-
-local function loadWebhookURL()
-    if not file.Exists(WEBHOOK_URL_FILE, "DATA") then return nil end
-    local url = file.Read(WEBHOOK_URL_FILE, "DATA")
-    if not url then return nil end
-    url = url:Trim()
-    return url ~= "" and url or nil
-end
-
-local function loadWebhookEnabled()
-    if not file.Exists(WEBHOOK_STATE_FILE, "DATA") then return cfg.WebhookEnabledDefault end
-    return file.Read(WEBHOOK_STATE_FILE, "DATA") == "1"
 end
 
 local function isValidWebhookURL(url)
@@ -45,37 +31,76 @@ local function isValidWebhookURL(url)
             or url:match("^https://discordapp%.com/api/webhooks/") ~= nil)
 end
 
-local WebhookURL     = loadWebhookURL()
-local WebhookEnabled = loadWebhookEnabled()
+local function loadWebhooks()
+    if not file.Exists(WEBHOOKS_FILE, "DATA") then return {} end
+    local raw = file.Read(WEBHOOKS_FILE, "DATA")
+    if not raw or raw == "" then return {} end
+    return util.JSONToTable(raw) or {}
+end
 
-function DuckAch.API.SetWebhookURL(url)
+local Webhooks = loadWebhooks()
+
+local function saveWebhooks()
+    ensureDataDir()
+    file.Write(WEBHOOKS_FILE, util.TableToJSON(Webhooks, true))
+end
+
+function DuckAch.API.AddWebhook(ply, url)
     if not isValidWebhookURL(url) then return false, "invalid_url" end
-    ensureDataDir()
-    file.Write(WEBHOOK_URL_FILE, url)
-    WebhookURL = url
+    table.insert(Webhooks, {
+        id               = "wh_" .. os.time() .. "_" .. math.random(1000, 9999),
+        url              = url,
+        enabled          = true,
+        createdByNick    = IsValid(ply) and ply:Nick() or "console",
+        createdBySteamID = IsValid(ply) and ply:SteamID() or "",
+        createdAt        = os.time(),
+    })
+    saveWebhooks()
     return true
 end
 
-function DuckAch.API.ClearWebhookURL()
-    if file.Exists(WEBHOOK_URL_FILE, "DATA") then file.Delete(WEBHOOK_URL_FILE) end
-    WebhookURL = nil
-    return true
+function DuckAch.API.RemoveWebhook(id)
+    for i, wh in ipairs(Webhooks) do
+        if wh.id == id then
+            table.remove(Webhooks, i)
+            saveWebhooks()
+            return true
+        end
+    end
+    return false, "not_found"
 end
 
-function DuckAch.API.SetWebhookEnabled(state)
-    ensureDataDir()
-    state = state and true or false
-    file.Write(WEBHOOK_STATE_FILE, state and "1" or "0")
-    WebhookEnabled = state
-    return true
+function DuckAch.API.SetWebhookEnabled(id, state)
+    for _, wh in ipairs(Webhooks) do
+        if wh.id == id then
+            wh.enabled = state and true or false
+            saveWebhooks()
+            return true
+        end
+    end
+    return false, "not_found"
 end
 
-function DuckAch.API.GetWebhookStatus()
-    return { enabled = WebhookEnabled, configured = WebhookURL ~= nil }
+function DuckAch.API.GetWebhookList()
+    local out = {}
+    for _, wh in ipairs(Webhooks) do
+        table.insert(out, {
+            id               = wh.id,
+            enabled          = wh.enabled,
+            createdByNick    = wh.createdByNick,
+            createdBySteamID = wh.createdBySteamID,
+            createdAt        = wh.createdAt,
+        })
+    end
+    return out
 end
 
 function DuckAch.API.WebhookSend(ply, achId)
-    if not WebhookEnabled or not WebhookURL then return false end
+    local activeHooks = {}
+    for _, wh in ipairs(Webhooks) do
+        if wh.enabled then table.insert(activeHooks, wh) end
+    end
+    if #activeHooks == 0 then return false end
 
     if not reqwest then
         DuckAchLogger.warn("Webhook integration depends on reqwest")
@@ -116,23 +141,26 @@ function DuckAch.API.WebhookSend(ply, achId)
         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
 
-    reqwest({
-        url = WebhookURL,
-        method = "POST",
-        type = "application/json",
-        headers = {
-            ["Content-Type"] = "application/json",
-            ["User-Agent"] = "DuckAchievements"
-        },
-        body = util.TableToJSON({
-            embeds = { embed }
-        }),
-        failed = function(err)
-            DuckAchLogger.error("Webhook falhou: " .. tostring(err))
-        end
-    })
+    local body = util.TableToJSON({ embeds = { embed } })
 
-    DuckAchLogger.info("Sent webook")
+    for _, wh in ipairs(activeHooks) do
+        local hookId = wh.id
+        reqwest({
+            url = wh.url,
+            method = "POST",
+            type = "application/json",
+            headers = {
+                ["Content-Type"] = "application/json",
+                ["User-Agent"] = "DuckAchievements"
+            },
+            body = body,
+            failed = function(err)
+                DuckAchLogger.error("Webhook falhou (" .. hookId .. "): " .. tostring(err))
+            end
+        })
+    end
+
+    DuckAchLogger.info("Sent webhook to " .. #activeHooks .. " destination(s)")
     return true
 end
 

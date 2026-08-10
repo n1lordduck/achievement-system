@@ -76,7 +76,7 @@ local _adminOpen    = false
 local _adminList    = {}
 local _formSnapshot = nil
 local _adminFrame   = nil
-local _webhookStatus = { enabled = false, configured = false }
+local _webhookList  = {}
 
 local function isSuperAdmin()
     return LocalPlayer():IsSuperAdmin()
@@ -471,11 +471,102 @@ local function buildAdminList(listPanel, onEdit)
 end
 
 local _webhookPanel = nil
+local _webhookListPanel = nil
+
+local function formatWebhookTimestamp(ts)
+    if not ts or ts == 0 then return "?" end
+    return os.date("%Y-%m-%d %H:%M:%S", ts)
+end
+
+local function wrapTextLines(text, font, maxW)
+    surface.SetFont(font)
+    local words = string.Explode(" ", text)
+    local lines = {}
+    local cur   = ""
+    for _, word in ipairs(words) do
+        local test = cur == "" and word or (cur .. " " .. word)
+        local tw = surface.GetTextSize(test)
+        if tw > maxW and cur ~= "" then
+            table.insert(lines, cur)
+            cur = word
+        else
+            cur = test
+        end
+    end
+    if cur ~= "" then table.insert(lines, cur) end
+    return lines
+end
+
+local function buildWebhookCards()
+    if not IsValid(_webhookListPanel) then return end
+    _webhookListPanel:Clear()
+
+    local lw   = _webhookListPanel:GetWide()
+    local rowH = 62
+    local gap  = 6
+    local y    = 0
+
+    if #_webhookList == 0 then
+        local empty = vgui.Create("DPanel", _webhookListPanel)
+        empty:SetPos(0, 0)
+        empty:SetSize(lw, 28)
+        empty.Paint = function(self, w, h)
+            DuckAch.drawText(DuckAch.L("admin.webhook_empty"), "DA_Sub", 0, 0, C.muted)
+        end
+        _webhookListPanel:SetTall(28)
+        return
+    end
+
+    for _, wh in ipairs(_webhookList) do
+        local _wh = wh
+        local card = vgui.Create("DPanel", _webhookListPanel)
+        card:SetPos(0, y)
+        card:SetSize(lw, rowH)
+        card.Paint = function(self, w, h)
+            fill(0, 0, w, h, C.card)
+            fill(0, 0, 3, h, _wh.enabled and C.success or C.muted, 220)
+            out(0, 0, w, h, C.border, 60)
+
+            local statusCol = _wh.enabled and C.success or C.muted
+            DuckAch.drawText(_wh.enabled and DuckAch.L("admin.webhook_active") or DuckAch.L("admin.webhook_inactive"),
+                "DA_Badge", 12, 8, statusCol)
+
+            DuckAch.drawText(string.format(DuckAch.L("admin.webhook_added_by"), _wh.createdByNick or "?"),
+                "DA_Sub", 12, 22, C.cream)
+            DuckAch.drawText(
+                (_wh.createdBySteamID or "?") .. "  ·  " .. formatWebhookTimestamp(_wh.createdAt),
+                "DA_Tiny", 12, 40, C.muted)
+        end
+
+        local btnW, btnH = 84, 22
+        local toggleBtn = actionBtn(card, lw - (btnW * 2 + 4 + 10), math.floor((rowH - btnH) * 0.5), btnW, btnH,
+            _wh.enabled and DuckAch.L("admin.webhook_deactivate") or DuckAch.L("admin.webhook_activate"),
+            _wh.enabled and C.muted or C.success, function()
+                net.Start("DuckAch.Admin.Webhook.SetEnabled")
+                    net.WriteString(_wh.id)
+                    net.WriteBool(not _wh.enabled)
+                net.SendToServer()
+            end)
+
+        local deleteBtn = actionBtn(card, lw - (btnW + 10), math.floor((rowH - btnH) * 0.5), btnW, btnH,
+            DuckAch.L("admin.webhook_delete"), C.red, function()
+                Derma_Query(DuckAch.L("admin.webhook_delete_confirm"), DuckAch.L("admin.webhook_title"),
+                    "Yes", function()
+                        net.Start("DuckAch.Admin.Webhook.Remove")
+                            net.WriteString(_wh.id)
+                        net.SendToServer()
+                    end, "Cancel", function() end)
+            end)
+
+        y = y + rowH + gap
+    end
+    _webhookListPanel:SetTall(math.max(y, 1))
+end
 
 local function openWebhookSettings()
     if IsValid(_webhookPanel) then _webhookPanel:Close() end
 
-    local W, H = 380, 244
+    local W, H = 420, 480
     local win = vgui.Create("DFrame")
     win:SetSize(W, H)
     win:Center()
@@ -484,6 +575,10 @@ local function openWebhookSettings()
     win:MakePopup()
     win.btnClose:SetSize(0, 0)
     win.btnClose.Paint = function() end
+    win.btnMinim:SetSize(0, 0)
+    win.btnMinim.Paint = function() end
+    win.btnMaxim:SetSize(0, 0)
+    win.btnMaxim.Paint = function() end
     _webhookPanel = win
 
     win.Paint = function(self, w, h)
@@ -505,76 +600,68 @@ local function openWebhookSettings()
     end
     closeBtn.DoClick = function() win:Close() end
 
-    local statusPnl = vgui.Create("DPanel", win)
-    statusPnl:SetPos(14, 40) statusPnl:SetSize(W - 28, 18)
-    statusPnl.Paint = function(self, w, h)
-        local txt = _webhookStatus.configured and DuckAch.L("admin.webhook_configured") or DuckAch.L("admin.webhook_not_configured")
-        local col = _webhookStatus.configured and C.success or C.muted
-        DuckAch.drawText(txt, "DA_Sub", 0, 0, col)
+    local addLabel = vgui.Create("DPanel", win)
+    addLabel:SetPos(14, 40) addLabel:SetSize(W - 28, 16)
+    addLabel.Paint = function(self, w, h)
+        DuckAch.drawText(DuckAch.L("admin.webhook_add_label"), "DA_Sub", 0, 0, C.cream)
     end
 
-    local enableCheck = vgui.Create("DCheckBoxLabel", win)
-    enableCheck:SetPos(14, 66)
-    enableCheck:SetText(DuckAch.L("admin.webhook_enable_label"))
-    enableCheck:SetTextColor(C.white)
-    enableCheck:SizeToContents()
-    enableCheck:SetChecked(_webhookStatus.enabled)
-    enableCheck.OnChange = function(self, val)
-        net.Start("DuckAch.Admin.Webhook.SetEnabled")
-            net.WriteBool(val)
-        net.SendToServer()
-    end
+    local urlEntry = styledEntry(win, 14, 60, W - 28 - 76, 26, DuckAch.L("admin.webhook_url_placeholder"))
 
-    local urlHint = vgui.Create("DPanel", win)
-    urlHint:SetPos(14, 98) urlHint:SetSize(W - 28, 16)
-    urlHint.Paint = function(self, w, h)
-        DuckAch.drawText(DuckAch.L("admin.webhook_url_hint"), "DA_Tiny", 0, 0, C.muted)
-    end
-
-    local urlEntry = styledEntry(win, 14, 116, W - 28, 26, DuckAch.L("admin.webhook_url_placeholder"))
-
-    local saveBtn = actionBtn(win, 14, 150, (W - 28 - 8) * 0.5, 28, DuckAch.L("admin.webhook_save"), C.success, function()
+    local addBtn = actionBtn(win, W - 14 - 68, 60, 68, 26, DuckAch.L("admin.webhook_add"), C.success, function()
         local v = urlEntry:GetValue():Trim()
         if v == "" then return end
-        net.Start("DuckAch.Admin.Webhook.SetURL")
+        net.Start("DuckAch.Admin.Webhook.Add")
             net.WriteString(v)
         net.SendToServer()
         urlEntry:SetValue("")
     end)
 
-    local removeBtn = actionBtn(win, 14 + (W - 28 - 8) * 0.5 + 8, 150, (W - 28 - 8) * 0.5, 28, DuckAch.L("admin.webhook_remove"), C.red, function()
-        Derma_Query(DuckAch.L("admin.webhook_remove_confirm"), DuckAch.L("admin.webhook_title"),
-            "Yes", function()
-                net.Start("DuckAch.Admin.Webhook.Clear")
-                net.SendToServer()
-            end, "Cancel", function() end)
-    end)
+    local urlHint = vgui.Create("DPanel", win)
+    urlHint:SetPos(14, 92) urlHint:SetSize(W - 28, 32)
+    urlHint.Paint = function(self, w, h)
+        local lines = wrapTextLines(DuckAch.L("admin.webhook_url_hint"), "DA_Tiny", w)
+        for i, line in ipairs(lines) do
+            DuckAch.drawText(line, "DA_Tiny", 0, (i - 1) * 14, C.muted)
+        end
+    end
 
     local hintPnl = vgui.Create("DPanel", win)
-    hintPnl:SetPos(14, 190) hintPnl:SetSize(W - 28, 32)
+    hintPnl:SetPos(14, 128) hintPnl:SetSize(W - 28, 16)
     hintPnl.Paint = function(self, w, h)
         DuckAch.drawText(DuckAch.L("admin.webhook_requires_reqwest"), "DA_Tiny", 0, 0, C.muted)
     end
 
+    local listLabel = vgui.Create("DPanel", win)
+    listLabel:SetPos(14, 152) listLabel:SetSize(W - 28, 16)
+    listLabel.Paint = function(self, w, h)
+        DuckAch.drawText(DuckAch.L("admin.webhook_list_label"), "DA_Sub", 0, 0, C.cream)
+    end
+
+    local scroll = vgui.Create("DScrollPanel", win)
+    scroll:SetPos(14, 174)
+    scroll:SetSize(W - 28, H - 174 - 14)
+    _webhookListPanel = scroll
+    buildWebhookCards()
+
     local hookName = "AchievementSystem.Admin.WebhookPanel_" .. tostring(win)
-    hook.Add("AchievementSystem.Admin.WebhookStatusUpdated", hookName, function()
+    hook.Add("AchievementSystem.Admin.WebhookListUpdated", hookName, function()
         if not IsValid(win) then
-            hook.Remove("AchievementSystem.Admin.WebhookStatusUpdated", hookName)
+            hook.Remove("AchievementSystem.Admin.WebhookListUpdated", hookName)
             hook.Remove("AchievementSystem.Admin.WebhookActionResult", hookName)
             return
         end
-        statusPnl:InvalidateLayout(true)
-        enableCheck:SetChecked(_webhookStatus.enabled)
+        buildWebhookCards()
     end)
     hook.Add("AchievementSystem.Admin.WebhookActionResult", hookName, function(ok, err)
         if not IsValid(win) then return end
         if not ok then
-            local msg = err == "invalid_url" and DuckAch.L("admin.webhook_invalid_url") or DuckAch.L("admin.webhook_save_failed")
+            local msg = err == "invalid_url" and DuckAch.L("admin.webhook_invalid_url") or DuckAch.L("admin.webhook_action_failed")
             Derma_Message(msg, DuckAch.L("admin.webhook_title"), "OK")
         end
     end)
 
-    net.Start("DuckAch.Admin.Webhook.RequestStatus")
+    net.Start("DuckAch.Admin.Webhook.RequestList")
     net.SendToServer()
 end
 
@@ -618,6 +705,10 @@ function DuckAch.UI.OpenAdmin()
 
     frame.btnClose:SetSize(0, 0)
     frame.btnClose.Paint = function() end
+    frame.btnMinim:SetSize(0, 0)
+    frame.btnMinim.Paint = function() end
+    frame.btnMaxim:SetSize(0, 0)
+    frame.btnMaxim.Paint = function() end
 
     local adminClose = vgui.Create("DButton", frame)
     adminClose:SetPos(W - 28, math.floor((topY - 20) * 0.5))
@@ -727,10 +818,20 @@ net.Receive("DuckAch.OpenAdmin", function()
     DuckAch.UI.OpenAdmin()
 end)
 
-net.Receive("DuckAch.Admin.Webhook.Status", function()
-    _webhookStatus.enabled    = net.ReadBool()
-    _webhookStatus.configured = net.ReadBool()
-    hook.Run("AchievementSystem.Admin.WebhookStatusUpdated")
+net.Receive("DuckAch.Admin.Webhook.List", function()
+    local count = net.ReadUInt(16)
+    local list = {}
+    for i = 1, count do
+        table.insert(list, {
+            id               = net.ReadString(),
+            enabled          = net.ReadBool(),
+            createdByNick    = net.ReadString(),
+            createdBySteamID = net.ReadString(),
+            createdAt        = net.ReadUInt(32),
+        })
+    end
+    _webhookList = list
+    hook.Run("AchievementSystem.Admin.WebhookListUpdated")
 end)
 
 net.Receive("DuckAch.Admin.Webhook.ActionResult", function()

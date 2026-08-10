@@ -569,6 +569,10 @@ function DuckAch.UI.OpenMenu()
     end
     frame.btnClose:SetSize(0, 0)
     frame.btnClose.Paint = function() end
+    frame.btnMinim:SetSize(0, 0)
+    frame.btnMinim.Paint = function() end
+    frame.btnMaxim:SetSize(0, 0)
+    frame.btnMaxim.Paint = function() end
 
     local topBar = vgui.Create("DPanel", frame)
     topBar:SetPos(0, 0)
