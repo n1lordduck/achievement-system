@@ -1,0 +1,14 @@
+--// ── Kills & Killstreaks ───────────────────────────────────────────────────
+--// Nenhuma conquista vem pré-cadastrada neste addon (workshop-ready).
+--// Cadastre as suas pelo painel Admin (STAFF PANEL > + NOVA CONQUISTA) ou
+--// direto em código com DuckAch.Registry.Register({...}), como no exemplo:
+--//
+-- DuckAch.Registry.Register({
+--     id          = "killstreak_5",
+--     name        = "On Fire",
+--     description = "Get a 5-kill streak without dying.",
+--     rarity      = "uncommon",
+--     secret      = false,
+--     triggerType = "get_x_killstreak",
+--     params      = { kills = 5 },
+-- })

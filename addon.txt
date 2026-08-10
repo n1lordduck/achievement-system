@@ -1,0 +1,4 @@
+name=Duck Achievements
+description=A full-featured achievement system for Garry's Mod. In-game achievement editor, 21+ trigger types, rarities, pinned achievements, and full multi-language support.
+author=DuckAchievements
+version=1.1

@@ -1,0 +1,17 @@
+--// ── Spawn de Entidades ────────────────────────────────────────────────────
+--// Usa path do modelo (GetModel()) em vez de classname.
+--// Ex: "models/props_junk/PopCan01a.mdl"
+--//
+--// Nenhuma conquista vem pré-cadastrada neste addon (workshop-ready).
+--// Cadastre as suas pelo painel Admin (STAFF PANEL > + NOVA CONQUISTA) ou
+--// direto em código com DuckAch.Registry.Register({...}), como no exemplo:
+--//
+-- DuckAch.Registry.Register({
+--     id          = "spawn_props_200",
+--     name        = "Prop Enjoyer",
+--     description = "Spawn 200 props.",
+--     rarity      = "uncommon",
+--     secret      = false,
+--     triggerType = "spawn_x_entity_y_times",
+--     params      = { classname = "any", times = 200 },
+-- })

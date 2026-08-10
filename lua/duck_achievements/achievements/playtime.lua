@@ -1,0 +1,14 @@
+--// ── Playtime & Progressão ─────────────────────────────────────────────────
+--// Nenhuma conquista vem pré-cadastrada neste addon (workshop-ready).
+--// Cadastre as suas pelo painel Admin (STAFF PANEL > + NOVA CONQUISTA) ou
+--// direto em código com DuckAch.Registry.Register({...}), como no exemplo:
+--//
+-- DuckAch.Registry.Register({
+--     id          = "playtime_20h",
+--     name        = "Old Guard",
+--     description = "Reach 20 hours of playtime on this server.",
+--     rarity      = "rare",
+--     secret      = false,
+--     triggerType = "reach_playtime_hours",
+--     params      = { hours = 20 },
+-- })

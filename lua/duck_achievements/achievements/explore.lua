@@ -1,0 +1,1 @@
+--// Nenhuma conquista vem pré-cadastrada neste addon (workshop-ready).

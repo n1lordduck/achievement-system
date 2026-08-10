@@ -1,0 +1,14 @@
+--// ── Social, Chat, Comportamento ──────────────────────────────────────────
+--// Nenhuma conquista vem pré-cadastrada neste addon (workshop-ready).
+--// Cadastre as suas pelo painel Admin (STAFF PANEL > + NOVA CONQUISTA) ou
+--// direto em código com DuckAch.Registry.Register({...}), como no exemplo:
+--//
+-- DuckAch.Registry.Register({
+--     id          = "say_hello",
+--     name        = "Hello, World!",
+--     description = "Say \"hello\" in chat.",
+--     rarity      = "common",
+--     secret      = false,
+--     triggerType = "say_specific_phrase",
+--     params      = { phrase = "hello", caseSensitive = false },
+-- })

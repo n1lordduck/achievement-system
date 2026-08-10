@@ -1,0 +1,5 @@
+--// ── Conquistas Diversas ───────────────────────────────────────────────────
+--// Nenhuma conquista vem pré-cadastrada neste addon (workshop-ready).
+--// Cadastre as suas pelo painel Admin (STAFF PANEL > + NOVA CONQUISTA) ou
+--// direto em código com DuckAch.Registry.Register({...}).
+--// Veja API.md para a lista completa de triggerTypes disponíveis.
