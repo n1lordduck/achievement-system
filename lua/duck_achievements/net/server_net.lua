@@ -286,6 +286,7 @@ end)
 local function sendWebhookList(ply)
     local list = DuckAch.API.GetWebhookList()
     net.Start("DuckAch.Admin.Webhook.List")
+        net.WriteBool(DuckAch.API.IsReqwestAvailable())
         net.WriteUInt(#list, 16)
         for _, wh in ipairs(list) do
             net.WriteString(wh.id)

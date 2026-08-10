@@ -77,6 +77,7 @@ local _adminList    = {}
 local _formSnapshot = nil
 local _adminFrame   = nil
 local _webhookList  = {}
+local _webhookReqwestAvailable = true
 
 local function isSuperAdmin()
     return LocalPlayer():IsSuperAdmin()
@@ -615,6 +616,9 @@ local function openWebhookSettings()
             net.WriteString(v)
         net.SendToServer()
         urlEntry:SetValue("")
+        if not _webhookReqwestAvailable then
+            Derma_Message(DuckAch.L("admin.webhook_reqwest_missing"), DuckAch.L("admin.webhook_title"), "OK")
+        end
     end)
 
     local urlHint = vgui.Create("DPanel", win)
@@ -627,20 +631,27 @@ local function openWebhookSettings()
     end
 
     local hintPnl = vgui.Create("DPanel", win)
-    hintPnl:SetPos(14, 128) hintPnl:SetSize(W - 28, 16)
+    hintPnl:SetPos(14, 128) hintPnl:SetSize(W - 28, 32)
     hintPnl.Paint = function(self, w, h)
-        DuckAch.drawText(DuckAch.L("admin.webhook_requires_reqwest"), "DA_Tiny", 0, 0, C.muted)
+        if _webhookReqwestAvailable then
+            DuckAch.drawText(DuckAch.L("admin.webhook_requires_reqwest"), "DA_Tiny", 0, 0, C.muted)
+        else
+            local lines = wrapTextLines(DuckAch.L("admin.webhook_reqwest_missing"), "DA_Tiny", w)
+            for i, line in ipairs(lines) do
+                DuckAch.drawText(line, "DA_Tiny", 0, (i - 1) * 14, C.red)
+            end
+        end
     end
 
     local listLabel = vgui.Create("DPanel", win)
-    listLabel:SetPos(14, 152) listLabel:SetSize(W - 28, 16)
+    listLabel:SetPos(14, 164) listLabel:SetSize(W - 28, 16)
     listLabel.Paint = function(self, w, h)
         DuckAch.drawText(DuckAch.L("admin.webhook_list_label"), "DA_Sub", 0, 0, C.cream)
     end
 
     local scroll = vgui.Create("DScrollPanel", win)
-    scroll:SetPos(14, 174)
-    scroll:SetSize(W - 28, H - 174 - 14)
+    scroll:SetPos(14, 186)
+    scroll:SetSize(W - 28, H - 186 - 14)
     _webhookListPanel = scroll
     buildWebhookCards()
 
@@ -819,6 +830,7 @@ net.Receive("DuckAch.OpenAdmin", function()
 end)
 
 net.Receive("DuckAch.Admin.Webhook.List", function()
+    _webhookReqwestAvailable = net.ReadBool()
     local count = net.ReadUInt(16)
     local list = {}
     for i = 1, count do

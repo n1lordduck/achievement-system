@@ -2,6 +2,14 @@ DuckAch.API = {}
 
 local cfg = DuckAch.Config
 
+if not reqwest then
+    pcall(require, "reqwest")
+end
+
+function DuckAch.API.IsReqwestAvailable()
+    return reqwest ~= nil
+end
+
 local function broadcastUnlockColored(ply, achDef)
     local rar = DuckAch.GetRarity(achDef.rarity)
     net.Start("DuckAch.ChatBroadcast")
