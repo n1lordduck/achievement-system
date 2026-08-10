@@ -2,7 +2,7 @@ DuckAch.API = {}
 
 local cfg = DuckAch.Config
 
-if not reqwest then
+if not reqwest and util.IsBinaryModuleInstalled("reqwest") then
     pcall(require, "reqwest")
 end
 
