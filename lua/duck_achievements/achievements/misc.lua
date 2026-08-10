@@ -12,4 +12,4 @@
 --     params      = { rarity = "legendary" },
 -- })
 --
--- See API.md for the full list of available triggerTypes.
+-- See classes/achievement_class.lua's VALID_TYPES for the full list of available triggerTypes.

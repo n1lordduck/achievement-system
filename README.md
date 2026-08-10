@@ -41,7 +41,7 @@ git clone https://github.com/n1lordduck/achievement-system.git garrysmod/addons/
 - `duck_ach_debug 1` in the server console enables debug logging.
 - The Discord webhook feature needs the [reqwest](https://github.com/williamvenner/gmsv_reqwest) binary module installed server-side. Everything else works without it.
 
-See [API.md](./API.md) for the full public API (`DuckAch.API`, hooks, achievement definition format) and [ARCHITECTURE.md](./ARCHITECTURE.md) for how the addon is structured internally.
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for how the addon is structured internally, its data model, and the public extension points (`DuckAch.API`, hooks) other addons can hook into.
 
 ## Directory Structure
 
