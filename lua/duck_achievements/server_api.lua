@@ -1,4 +1,5 @@
 DuckAch.API = {}
+DuckAch.Webhooks = {}
 
 local cfg = DuckAch.Config
 
@@ -6,7 +7,7 @@ if not reqwest and util.IsBinaryModuleInstalled("reqwest") then
     pcall(require, "reqwest")
 end
 
-function DuckAch.API.IsReqwestAvailable()
+function DuckAch.Webhooks.IsReqwestAvailable()
     return reqwest ~= nil
 end
 
@@ -53,7 +54,7 @@ local function saveWebhooks()
     file.Write(WEBHOOKS_FILE, util.TableToJSON(Webhooks, true))
 end
 
-function DuckAch.API.AddWebhook(ply, url)
+function DuckAch.Webhooks.Add(ply, url)
     if not isValidWebhookURL(url) then return false, "invalid_url" end
     table.insert(Webhooks, {
         id               = "wh_" .. os.time() .. "_" .. math.random(1000, 9999),
@@ -67,7 +68,7 @@ function DuckAch.API.AddWebhook(ply, url)
     return true
 end
 
-function DuckAch.API.RemoveWebhook(id)
+function DuckAch.Webhooks.Remove(id)
     for i, wh in ipairs(Webhooks) do
         if wh.id == id then
             table.remove(Webhooks, i)
@@ -78,7 +79,7 @@ function DuckAch.API.RemoveWebhook(id)
     return false, "not_found"
 end
 
-function DuckAch.API.SetWebhookEnabled(id, state)
+function DuckAch.Webhooks.SetEnabled(id, state)
     for _, wh in ipairs(Webhooks) do
         if wh.id == id then
             wh.enabled = state and true or false
@@ -89,7 +90,7 @@ function DuckAch.API.SetWebhookEnabled(id, state)
     return false, "not_found"
 end
 
-function DuckAch.API.GetWebhookList()
+function DuckAch.Webhooks.GetList()
     local out = {}
     for _, wh in ipairs(Webhooks) do
         table.insert(out, {
@@ -103,7 +104,7 @@ function DuckAch.API.GetWebhookList()
     return out
 end
 
-function DuckAch.API.WebhookSend(ply, achId)
+function DuckAch.Webhooks.Send(ply, achId)
     local activeHooks = {}
     for _, wh in ipairs(Webhooks) do
         if wh.enabled then table.insert(activeHooks, wh) end
@@ -191,7 +192,7 @@ function DuckAch.API.Grant(ply, achId)
     local pct = totalPlayers > 0 and math.Round((ownerCount / totalPlayers) * 100, 1) or 0
 
     broadcastUnlockColored(ply, achDef)
-    DuckAch.API.WebhookSend(ply, achId)
+    DuckAch.Webhooks.Send(ply, achId)
 
     local payload = buildNotifPayload(achDef, pct)
     DuckAch.Net.SendUnlock(ply, payload)

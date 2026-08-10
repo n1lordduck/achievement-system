@@ -284,9 +284,9 @@ net.Receive("DuckAch.Admin.SetEntId", function(_, ply)
 end)
 
 local function sendWebhookList(ply)
-    local list = DuckAch.API.GetWebhookList()
+    local list = DuckAch.Webhooks.GetList()
     net.Start("DuckAch.Admin.Webhook.List")
-        net.WriteBool(DuckAch.API.IsReqwestAvailable())
+        net.WriteBool(DuckAch.Webhooks.IsReqwestAvailable())
         net.WriteUInt(#list, 16)
         for _, wh in ipairs(list) do
             net.WriteString(wh.id)
@@ -314,14 +314,14 @@ end)
 net.Receive("DuckAch.Admin.Webhook.Add", function(_, ply)
     if not isSuperAdmin(ply) then return end
     local url = net.ReadString()
-    local ok, err = DuckAch.API.AddWebhook(ply, url)
+    local ok, err = DuckAch.Webhooks.Add(ply, url)
     sendWebhookResult(ply, ok, err)
 end)
 
 net.Receive("DuckAch.Admin.Webhook.Remove", function(_, ply)
     if not isSuperAdmin(ply) then return end
     local id = net.ReadString()
-    local ok, err = DuckAch.API.RemoveWebhook(id)
+    local ok, err = DuckAch.Webhooks.Remove(id)
     sendWebhookResult(ply, ok, err)
 end)
 
@@ -329,7 +329,7 @@ net.Receive("DuckAch.Admin.Webhook.SetEnabled", function(_, ply)
     if not isSuperAdmin(ply) then return end
     local id    = net.ReadString()
     local state = net.ReadBool()
-    local ok, err = DuckAch.API.SetWebhookEnabled(id, state)
+    local ok, err = DuckAch.Webhooks.SetEnabled(id, state)
     sendWebhookResult(ply, ok, err)
 end)
 
