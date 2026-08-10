@@ -1,77 +1,77 @@
-# DuckAchievements — Documentação da API
+# DuckAchievements - API Documentation
 
-> Addon de conquistas para Garry's Mod.  
-> Prefixo global: `DuckAch` | Debug: `duck_ach_debug 1` no console do servidor
+> Achievement addon for Garry's Mod.
+> Global prefix: `DuckAch` | Debug: `duck_ach_debug 1` in the server console
 
 ---
 
-## Índice
+## Table of Contents
 
-1. [Registrar Conquistas](#1-registrar-conquistas)
-2. [DuckAch.API — Servidor](#2-duckachapi--servidor)
-3. [DuckAch.Registry — Shared](#3-duckachregistry--shared)
-4. [DuckAch.Data — Servidor](#4-duckachdata--servidor)
-5. [DuckAch.Client — Cliente](#5-duckachclient--cliente)
+1. [Registering Achievements](#1-registering-achievements)
+2. [DuckAch.API - Server](#2-duckachapi---server)
+3. [DuckAch.Registry - Shared](#3-duckachregistry---shared)
+4. [DuckAch.Data - Server](#4-duckachdata---server)
+5. [DuckAch.Client - Client](#5-duckachclient---client)
 6. [Classes](#6-classes)
 7. [Hooks](#7-hooks)
-8. [Configuração](#8-configuração)
-9. [Raridades](#9-raridades)
-10. [Tipos de Gatilho](#10-tipos-de-gatilho)
-11. [Comandos de Console](#11-comandos-de-console)
+8. [Configuration](#8-configuration)
+9. [Rarities](#9-rarities)
+10. [Trigger Types](#10-trigger-types)
+11. [Console Commands](#11-console-commands)
 
 ---
 
-## 1. Registrar Conquistas
+## 1. Registering Achievements
 
-Crie um arquivo em `lua/duck_achievements/achievements/` e adicione-o ao `init.lua`.
+Create a file in `lua/duck_achievements/achievements/` and add it to `init.lua`.
 
 ```lua
 DuckAch.Registry.Register({
-    id          = "minha_conquista",       -- string única, sem espaços
-    name        = "Minha Conquista",
-    description = "Descrição do que fazer.",
-    rarity      = "rare",                  -- ver seção 9
-    thumbnail   = "https://i.imgur.com/abc.png",  -- opcional
-    secret      = false,                   -- true = oculta pra quem não tem
-    triggerType = "get_x_killstreak",      -- ver seção 10
-    params      = { kills = 10 },          -- depende do triggerType
+    id          = "my_achievement",        -- unique string, no spaces
+    name        = "My Achievement",
+    description = "Description of what to do.",
+    rarity      = "rare",                  -- see section 9
+    thumbnail   = "https://i.imgur.com/abc.png",  -- optional
+    secret      = false,                   -- true = hidden from players who don't have it
+    triggerType = "get_x_killstreak",      -- see section 10
+    params      = { kills = 10 },          -- depends on triggerType
 })
 ```
 
-**Campos obrigatórios:** `id`, `name`, `description`, `rarity`, `triggerType`
+**Required fields:** `id`, `name`, `description`, `rarity`, `triggerType`
 
 ---
 
-## 2. DuckAch.API — Servidor
+## 2. DuckAch.API - Server
 
-### `DuckAch.API.Grant(ply, achId)` → `boolean`
+### `DuckAch.API.Grant(ply, achId)` -> `boolean`
 
-Concede uma conquista a um jogador. Retorna `false` se o jogador já tiver, se a conquista não existir ou se `ply` for inválido.
+Grants an achievement to a player. Returns `false` if the player already has it, the achievement doesn't exist, or `ply` is invalid.
 
-Ao conceder: salva o perfil, envia notificação HUD ao jogador, broadcast colorido no chat de todos, e reenvia os dados completos pro jogador (atualiza grid em tempo real).
+On grant: saves the profile, sends a HUD notification to the player, broadcasts a colored message in chat to everyone, and resends the player's full data (updates the grid in real time).
 
 ```lua
 -- SERVER
-DuckAch.API.Grant(ply, "minha_conquista")
+DuckAch.API.Grant(ply, "my_achievement")
 ```
 
 ---
 
-### `DuckAch.API.HasAchievement(ply, achId)` → `boolean`
+### `DuckAch.API.HasAchievement(ply, achId)` -> `boolean`
 
-Checa se o jogador já possui a conquista.
+Checks whether the player already has the achievement.
 
 ```lua
 if DuckAch.API.HasAchievement(ply, "killstreak_5") then
-    -- jogador tem a conquista
+    -- player has the achievement
 end
 ```
 
 ---
 
-### `DuckAch.API.GetProfile(ply)` → `PlayerProfile`
+### `DuckAch.API.GetProfile(ply)` -> `PlayerProfile`
 
-Retorna o objeto `PlayerProfile` do jogador. Ver seção 6 para os métodos disponíveis.
+Returns the player's `PlayerProfile` object. See section 6 for available methods.
 
 ```lua
 local profile = DuckAch.API.GetProfile(ply)
@@ -80,51 +80,51 @@ print(profile.kills, profile.deaths, profile.killstreak)
 
 ---
 
-### `DuckAch.API.GetStats(achId)` → `table`
+### `DuckAch.API.GetStats(achId)` -> `table`
 
-Retorna estatísticas de posse da conquista entre todos os jogadores registrados.
+Returns ownership statistics for the achievement across all registered players.
 
 ```lua
 local stats = DuckAch.API.GetStats("killstreak_5")
--- stats.total   = total de jogadores no banco
--- stats.owners  = quantos têm a conquista
--- stats.pct     = porcentagem (0-100, arredondado em 1 decimal)
+-- stats.total   = total players in the database
+-- stats.owners  = how many have the achievement
+-- stats.pct     = percentage (0-100, rounded to 1 decimal)
 ```
 
 ---
 
 ### `DuckAch.API.TriggerInteract(ply, entId)`
 
-Aciona manualmente a lógica de interação com entidade. Normalmente chamado pelo hook `PlayerUse` interno, mas pode ser chamado por outros addons.
+Manually triggers the entity-interaction logic. Normally called by the internal `PlayerUse` hook, but can be called by other addons.
 
-- `entId` — string definida via stool ou `duck_ach_setentid`
+- `entId` - string set via the stool or `duck_ach_setentid`
 
 ```lua
--- Para integrar com um addon de porta customizada, por exemplo:
-DuckAch.API.TriggerInteract(ply, "minha_porta_especial")
+-- To integrate with a custom door addon, for example:
+DuckAch.API.TriggerInteract(ply, "my_special_door")
 ```
 
 ---
 
-## 3. DuckAch.Registry — Shared
+## 3. DuckAch.Registry - Shared
 
-Disponível em SERVER e CLIENT.
+Available on SERVER and CLIENT.
 
-### `DuckAch.Registry.Register(def)` → `boolean`
+### `DuckAch.Registry.Register(def)` -> `boolean`
 
-Registra uma conquista. Retorna `false` se inválida ou duplicada.
+Registers an achievement. Returns `false` if invalid or duplicate.
 
-### `DuckAch.Registry.Get(id)` → `Achievement | nil`
+### `DuckAch.Registry.Get(id)` -> `Achievement | nil`
 
-Retorna o objeto `Achievement` pelo ID.
+Returns the `Achievement` object by ID.
 
-### `DuckAch.Registry.GetAll()` → `table`
+### `DuckAch.Registry.GetAll()` -> `table`
 
-Retorna a tabela `{ [id] = Achievement }` com todas as conquistas.
+Returns the `{ [id] = Achievement }` table with all achievements.
 
-### `DuckAch.Registry.GetByType(triggerType)` → `table`
+### `DuckAch.Registry.GetByType(triggerType)` -> `table`
 
-Retorna lista de conquistas de um tipo específico.
+Returns the list of achievements of a specific type.
 
 ```lua
 local streakAchs = DuckAch.Registry.GetByType("get_x_killstreak")
@@ -133,77 +133,77 @@ for _, ach in ipairs(streakAchs) do
 end
 ```
 
-### `DuckAch.Registry.HasAnyOfType(triggerType)` → `boolean`
+### `DuckAch.Registry.HasAnyOfType(triggerType)` -> `boolean`
 
-Útil para checar antes de registrar hooks pesados.
+Useful for checking before registering heavy hooks.
 
-### `DuckAch.Registry.HasAnyKillRelated()` → `boolean`
+### `DuckAch.Registry.HasAnyKillRelated()` -> `boolean`
 
-Retorna `true` se há qualquer conquista de kill/death (killstreak, die_by, killed_by).
+Returns `true` if there's any kill/death-related achievement (killstreak, die_by, killed_by).
 
-### `DuckAch.Registry.Count()` → `number`
+### `DuckAch.Registry.Count()` -> `number`
 
-Total de conquistas registradas.
+Total number of registered achievements.
 
 ### `DuckAch.Registry.Remove(id)`
 
-Remove uma conquista do registro em tempo de execução. Usado pelo painel admin.
+Removes an achievement from the registry at runtime. Used by the admin panel.
 
-### `DuckAch.Registry.SerializeForPlayer(profile)` → `table`
+### `DuckAch.Registry.SerializeForPlayer(profile)` -> `table`
 
-Serializa todas as conquistas respeitando `secret` — conquistas secretas que o jogador não tem aparecem como `???`. Usado internamente pelo `SendFullData`.
+Serializes all achievements respecting `secret` - secret achievements the player doesn't have appear as `???`. Used internally by `SendFullData`.
 
 ---
 
-## 4. DuckAch.Data — Servidor
+## 4. DuckAch.Data - Server
 
-Camada de persistência. Salva em `data/duck_achievements/profiles.txt` (comprimido).
+Persistence layer. Saves to `data/duck_achievements/profiles.txt` (compressed).
 
-### `DuckAch.Data.GetProfile(ply)` → `PlayerProfile`
+### `DuckAch.Data.GetProfile(ply)` -> `PlayerProfile`
 
-Retorna o perfil do jogador, criando um novo se não existir.
+Returns the player's profile, creating a new one if it doesn't exist.
 
-### `DuckAch.Data.GetProfileBySteamId(sid)` → `PlayerProfile | nil`
+### `DuckAch.Data.GetProfileBySteamId(sid)` -> `PlayerProfile | nil`
 
-Busca perfil por SteamID string (ex: `"STEAM_0:1:12345"`). Retorna `nil` se o jogador nunca entrou.
+Looks up a profile by SteamID string (e.g. `"STEAM_0:1:12345"`). Returns `nil` if the player never joined.
 
 ### `DuckAch.Data.Save()`
 
-Força salvamento imediato de todos os perfis. Chamado automaticamente a cada `SaveInterval` segundos e no `ShutDown`.
+Forces an immediate save of all profiles. Called automatically every `SaveInterval` seconds and on `ShutDown`.
 
 ### `DuckAch.Data.Load()`
 
-Carrega perfis do disco. Chamado automaticamente no `Initialize`.
+Loads profiles from disk. Called automatically on `Initialize`.
 
-### `DuckAch.Data.GetTotalPlayers()` → `number`
+### `DuckAch.Data.GetTotalPlayers()` -> `number`
 
-Total de jogadores no banco de dados.
+Total number of players in the database.
 
-### `DuckAch.Data.GetAchievementOwnerCount(achId)` → `number`
+### `DuckAch.Data.GetAchievementOwnerCount(achId)` -> `number`
 
-Quantos jogadores possuem uma conquista específica.
+How many players own a specific achievement.
 
 ### `DuckAch.Data.SetOptOut(ply, state)`
 
-Define se o jogador optou por sair do cache de thumbnails. `state = true` = opt out.
+Sets whether the player opted out of the thumbnail cache. `state = true` = opt out.
 
 ### `DuckAch.Data.ClearPlayerCache(ply)`
 
-Reseta o opt-out do jogador (reativa cache).
+Resets the player's opt-out (re-enables cache).
 
 ---
 
-## 5. DuckAch.Client — Cliente
+## 5. DuckAch.Client - Client
 
-Disponível apenas no CLIENT.
+Available on CLIENT only.
 
 ### `DuckAch.Client.achievements`
 
-Tabela com todas as conquistas no formato público `{ [id] = view }`. Conquistas secretas não possuídas aparecem com `name = "???"` e `locked = true`.
+Table with all achievements in the public `{ [id] = view }` format. Secret achievements not yet owned appear with `name = "???"` and `locked = true`.
 
 ### `DuckAch.Client.profile`
 
-Tabela com dados do jogador local:
+Table with the local player's data:
 ```lua
 {
     kills       = number,
@@ -215,11 +215,11 @@ Tabela com dados do jogador local:
 
 ### `DuckAch.Client.stats`
 
-Tabela `{ [achId] = pct }` com a porcentagem de jogadores que possuem cada conquista.
+Table `{ [achId] = pct }` with the percentage of players who own each achievement.
 
 ### `DuckAch.Client.GetThumbnail(url, callback)`
 
-Carrega um material de URL e armazena em cache. O callback recebe o `IMaterial` ou `nil`.
+Loads a material from a URL and caches it. The callback receives the `IMaterial` or `nil`.
 
 ```lua
 DuckAch.Client.GetThumbnail("https://i.imgur.com/abc.png", function(mat)
@@ -230,12 +230,12 @@ DuckAch.Client.GetThumbnail("https://i.imgur.com/abc.png", function(mat)
 end)
 ```
 
-### `DuckAch.Client.GetCachedMat(url)` → `IMaterial | nil`
+### `DuckAch.Client.GetCachedMat(url)` -> `IMaterial | nil`
 
-Versão sem callback para uso dentro de `Paint` (chamado todo frame). Retorna `nil` se ainda não carregado.
+Callback-free version for use inside `Paint` (called every frame). Returns `nil` if not loaded yet.
 
 ```lua
--- Dentro de panel.Paint:
+-- Inside panel.Paint:
 local mat = DuckAch.Client.GetCachedMat(view.thumbnail)
 if mat and not mat:IsError() then
     surface.SetMaterial(mat)
@@ -245,15 +245,15 @@ end
 
 ### `DuckAch.Client.FetchStats(achId)`
 
-Pede ao servidor a porcentagem atualizada de uma conquista. Resultado chega via `DuckAch.Client.stats[achId]`.
+Asks the server for the up-to-date percentage of an achievement. The result arrives via `DuckAch.Client.stats[achId]`.
 
 ### `DuckAch.Client.SetOptOut(state)`
 
-Envia opt-out ao servidor. `true` = desativar cache de thumbnails.
+Sends the opt-out flag to the server. `true` = disable thumbnail cache.
 
 ### `DuckAch.Client.ClearCache()`
 
-Pede ao servidor para resetar o cache e reenvia os dados completos.
+Asks the server to reset the cache and resend the full data.
 
 ---
 
@@ -261,56 +261,56 @@ Pede ao servidor para resetar o cache e reenvia os dados completos.
 
 ### Achievement
 
-Objeto retornado por `DuckAch.Registry.Get()` e `DuckAch.Registry.GetAll()`.
+Object returned by `DuckAch.Registry.Get()` and `DuckAch.Registry.GetAll()`.
 
-| Campo | Tipo | Descrição |
+| Field | Type | Description |
 |---|---|---|
-| `id` | string | Identificador único |
-| `name` | string | Nome exibido |
-| `description` | string | Descrição |
-| `rarity` | string | ID da raridade |
-| `thumbnail` | string\|nil | URL da imagem |
-| `secret` | boolean | Se é conquista secreta |
-| `triggerType` | string | Tipo de gatilho |
-| `params` | table | Parâmetros do gatilho |
+| `id` | string | Unique identifier |
+| `name` | string | Displayed name |
+| `description` | string | Description |
+| `rarity` | string | Rarity ID |
+| `thumbnail` | string\|nil | Image URL |
+| `secret` | boolean | Whether it's a secret achievement |
+| `triggerType` | string | Trigger type |
+| `params` | table | Trigger parameters |
 
-**Métodos:**
+**Methods:**
 
 ```lua
-ach:getParam("kills")          -- retorna params[key]
+ach:getParam("kills")          -- returns params[key]
 ach:isType("get_x_killstreak") -- boolean
-ach:getPublicView(playerHasIt) -- tabela para envio ao client
+ach:getPublicView(playerHasIt) -- table to send to the client
 ```
 
 ---
 
 ### PlayerProfile
 
-Objeto retornado por `DuckAch.API.GetProfile()` e `DuckAch.Data.GetProfile()`.
+Object returned by `DuckAch.API.GetProfile()` and `DuckAch.Data.GetProfile()`.
 
-| Campo | Tipo | Descrição |
+| Field | Type | Description |
 |---|---|---|
-| `steamId` | string | SteamID do jogador |
+| `steamId` | string | Player's SteamID |
 | `unlocked` | table | `{ [achId] = unixTimestamp }` |
-| `counters` | table | Contadores de progresso |
-| `killstreak` | number | Killstreak atual (reseta ao morrer) |
-| `kills` | number | Total de kills |
-| `deaths` | number | Total de mortes |
-| `optOutCache` | boolean | Opt-out de thumbnail cache |
+| `counters` | table | Progress counters |
+| `killstreak` | number | Current killstreak (resets on death) |
+| `kills` | number | Total kills |
+| `deaths` | number | Total deaths |
+| `optOutCache` | boolean | Thumbnail cache opt-out |
 
-**Métodos:**
+**Methods:**
 
 ```lua
 profile:hasAchievement(achId)        -- boolean
-profile:unlock(achId)                -- boolean (false se já tinha)
+profile:unlock(achId)                -- boolean (false if already had it)
 profile:getCounter(key)              -- number
-profile:incrementCounter(key, amt)   -- number (novo valor)
+profile:incrementCounter(key, amt)   -- number (new value)
 profile:setCounter(key, value)
 profile:addKill()                    -- +1 kill, +1 killstreak
-profile:addDeath()                   -- +1 death, reseta killstreak
+profile:addDeath()                   -- +1 death, resets killstreak
 profile:resetKillstreak()
-profile:unlockedCount()              -- total de conquistas desbloqueadas
-profile:serialize()                  -- tabela para salvar em disco
+profile:unlockedCount()              -- total achievements unlocked
+profile:serialize()                  -- table for saving to disk
 ```
 
 ---
@@ -321,182 +321,182 @@ profile:serialize()                  -- tabela para salvar em disco
 
 #### `AchievementSystem.API.OnGrant` `(ply, achDef, profile)`
 
-Disparado após uma conquista ser concedida com sucesso. Use para integrar com outros sistemas.
+Fired after an achievement is successfully granted. Use it to integrate with other systems.
 
 ```lua
-hook.Add("AchievementSystem.API.OnGrant", "MeuAddon.OnGrant", function(ply, achDef, profile)
-    -- achDef é o objeto Achievement
-    -- profile é o PlayerProfile atualizado
+hook.Add("AchievementSystem.API.OnGrant", "MyAddon.OnGrant", function(ply, achDef, profile)
+    -- achDef is the Achievement object
+    -- profile is the updated PlayerProfile
     if achDef.id == "killstreak_25" then
-        -- dar recompensa especial
+        -- give a special reward
     end
 end)
 ```
 
 #### `AchievementSystem.Admin.HooksRebuild`
 
-Disparado quando conquistas são criadas/deletadas pelo painel admin. O sistema reconstrói os hooks automaticamente, mas outros addons podem ouvir se precisarem reagir.
+Fired when achievements are created/deleted through the admin panel. The system rebuilds its own hooks automatically, but other addons can listen if they need to react.
 
 ```lua
-hook.Add("AchievementSystem.Admin.HooksRebuild", "MeuAddon.Rebuild", function()
-    -- reconstrói cache próprio se necessário
+hook.Add("AchievementSystem.Admin.HooksRebuild", "MyAddon.Rebuild", function()
+    -- rebuild your own cache if needed
 end)
 ```
 
 #### `DuckAch.Admin.PickerSelected` `(ply, ent, entId)`
 
-Disparado quando um superadmin clica em uma entidade com a Entity Picker stool.
+Fired when a superadmin clicks an entity with the Entity Picker stool.
 
 ### CLIENT
 
 #### `AchievementSystem.Client.DataReady`
 
-Disparado quando os dados completos chegam do servidor (ao conectar e ao desbloquear conquistas). Use para atualizar UIs externas.
+Fired when the full data arrives from the server (on connect and on achievement unlock). Use it to update external UIs.
 
 ```lua
-hook.Add("AchievementSystem.Client.DataReady", "MeuAddon.Refresh", function()
-    -- DuckAch.Client.achievements, .profile e .stats estão atualizados
+hook.Add("AchievementSystem.Client.DataReady", "MyAddon.Refresh", function()
+    -- DuckAch.Client.achievements, .profile, and .stats are up to date
 end)
 ```
 
 #### `AchievementSystem.Client.OnUnlock` `(view)`
 
-Disparado quando o jogador local desbloqueia uma conquista. `view` é a tabela pública da conquista incluindo `view.pct`.
+Fired when the local player unlocks an achievement. `view` is the achievement's public table including `view.pct`.
 
 ```lua
-hook.Add("AchievementSystem.Client.OnUnlock", "MeuAddon.OnUnlock", function(view)
-    print("Desbloqueei:", view.name, view.rarity)
+hook.Add("AchievementSystem.Client.OnUnlock", "MyAddon.OnUnlock", function(view)
+    print("Unlocked:", view.name, view.rarity)
 end)
 ```
 
 ---
 
-## 8. Configuração
+## 8. Configuration
 
-Edite `lua/duck_achievements/shared_config.lua`:
+Edit `lua/duck_achievements/shared_config.lua`:
 
-| Chave | Padrão | Descrição |
+| Key | Default | Description |
 |---|---|---|
-| `DataDir` | `"duck_achievements/"` | Pasta em `data/` |
-| `SaveInterval` | `300` | Segundos entre auto-saves |
-| `ChatPrefix` | `"[Conquistas]"` | Prefixo no chat |
-| `ChatCommand` | `"conquistas"` | Comando `!conquistas` |
-| `NotifDuration` | `6` | Segundos que a notificação fica |
-| `NotifSlideTime` | `0.35` | Duração do slide-in (segundos) |
-| `NotifFadeTime` | `0.5` | Duração do fade-out (segundos) |
-| `NotifWidth` | `320` | Largura da notificação HUD |
-| `NotifHeight` | `80` | Altura da notificação HUD |
-| `ConfettiEnabled` | `true` | Ativa efeito de confetti |
-| `ConfettiCount` | `65` | Partículas de confetti por unlock |
-| `ConfettiLifetime` | `2.8` | Tempo de vida máximo do confetti |
-| `MaxStoredNotifs` | `3` | Máximo de notificações na tela ao mesmo tempo |
-| `SuperadminGroups` | `{ "superadmin" }` | Grupos com acesso ao `!achmin` |
+| `DataDir` | `"duck_achievements/"` | Folder under `data/` |
+| `SaveInterval` | `300` | Seconds between auto-saves |
+| `ChatPrefix` | `"[Achievements]"` | Chat prefix |
+| `ChatCommand` | `"achievements"` | `!achievements` command |
+| `NotifDuration` | `6` | Seconds the notification stays on screen |
+| `NotifSlideTime` | `0.35` | Slide-in duration (seconds) |
+| `NotifFadeTime` | `0.5` | Fade-out duration (seconds) |
+| `NotifWidth` | `320` | HUD notification width |
+| `NotifHeight` | `80` | HUD notification height |
+| `ConfettiEnabled` | `true` | Enables the confetti effect |
+| `ConfettiCount` | `65` | Confetti particles per unlock |
+| `ConfettiLifetime` | `2.8` | Maximum confetti lifetime |
+| `MaxStoredNotifs` | `3` | Max notifications on screen at once |
+| `SuperadminGroups` | `{ "superadmin" }` | Groups with access to `!achmin` |
 
 ---
 
-## 9. Raridades
+## 9. Rarities
 
-| ID | Label | Cor |
+| ID | Label | Color |
 |---|---|---|
-| `common` | Comum | Cinza `(160,160,160)` |
-| `uncommon` | Incomum | Verde `(100,200,100)` |
-| `rare` | Raro | Azul `(80,140,255)` |
-| `epic` | Épico | Roxo `(180,80,255)` |
-| `legendary` | Lendário | Dourado `(255,180,30)` |
-| `secret` | Secreto | Ciano `(193,235,233)` |
+| `common` | Common | Gray `(160,160,160)` |
+| `uncommon` | Uncommon | Green `(100,200,100)` |
+| `rare` | Rare | Blue `(80,140,255)` |
+| `epic` | Epic | Purple `(180,80,255)` |
+| `legendary` | Legendary | Gold `(255,180,30)` |
+| `secret` | Secret | Cyan `(193,235,233)` |
 
 ```lua
--- Acesso programático:
+-- Programmatic access:
 local rar = DuckAch.GetRarity("legendary")
 -- rar.id, rar.label, rar.color, rar.order
 ```
 
 ---
 
-## 10. Tipos de Gatilho
+## 10. Trigger Types
 
-Todos os triggers são processados automaticamente pelos hooks internos. O hook `PlayerUse` só é registrado se houver conquistas dos tipos `interact_*`. O hook `PlayerDeath` só é registrado se houver conquistas kill-related. Etc.
+All triggers are processed automatically by the internal hooks. The `PlayerUse` hook is only registered if there are achievements of the `interact_*` types. The `PlayerDeath` hook is only registered if there are kill-related achievements. Etc.
 
 ### `get_killed_by_x`
-Disparado quando o jogador é morto por alguém específico.
+Fired when the player is killed by a specific person.
 ```lua
 params = {
-    steamid = "STEAM_0:1:12345",  -- SteamID do killer
-    -- ou: steamid = "ADMIN"      -- qualquer admin/superadmin
+    steamid = "STEAM_0:1:12345",  -- killer's SteamID
+    -- or: steamid = "ADMIN"      -- any admin/superadmin
 }
 ```
 
 ### `spawn_x_entity`
-Disparado na primeira vez que o jogador spawna a entidade.
+Fired the first time the player spawns the entity.
 ```lua
 params = { classname = "npc_combine_s" }
 ```
 
 ### `spawn_x_entity_y_times`
-Disparado após spawnar a entidade N vezes.
+Fired after spawning the entity N times.
 ```lua
 params = { classname = "npc_combine_s", times = 100 }
 ```
 
 ### `get_x_usergroup`
-Disparado quando o jogador entra no usergroup especificado. Detectado via `EntityNetworkedVarChanged` (compatível com ULX, ServerGuard e GMod base).
+Fired when the player enters the specified usergroup. Detected via `EntityNetworkedVarChanged` (compatible with ULX, ServerGuard, and base GMod).
 ```lua
 params = { usergroup = "admin" }
 ```
 
 ### `die_by_x_entity`
-Disparado quando o jogador morre e o inflictor tem o classname especificado.
+Fired when the player dies and the inflictor has the specified classname.
 ```lua
 params = { classname = "prop_physics" }
 ```
 
 ### `interact_with_x_entity`
-Disparado quando o jogador aperta E em uma entidade com o `entId` definido. O `entId` é configurado via stool ou `duck_ach_setentid`.
+Fired when the player presses E on an entity with the given `entId`. The `entId` is set via the stool or `duck_ach_setentid`.
 ```lua
-params = { entId = "minha_porta_especial" }
+params = { entId = "my_special_door" }
 ```
 
 ### `get_x_killstreak`
-Disparado quando o jogador acumula N kills sem morrer.
+Fired when the player racks up N kills without dying.
 ```lua
 params = { kills = 10 }
 ```
 
 ### `get_x_killstreak_with_y_weapon`
-Kills consecutivas usando apenas a arma especificada. Resetado ao usar outra arma.
+Consecutive kills using only the specified weapon. Resets when another weapon is used.
 ```lua
 params = { kills = 5, weapon = "weapon_pistol" }
 ```
 
 ### `say_specific_phrase`
-Disparado quando o jogador manda a frase exata no chat.
+Fired when the player sends the exact phrase in chat.
 ```lua
 params = {
-    phrase        = "duck supremo",
-    caseSensitive = false,   -- opcional, padrão false
+    phrase        = "supreme duck",
+    caseSensitive = false,   -- optional, defaults to false
 }
 ```
 
 ---
 
-## 11. Comandos de Console
+## 11. Console Commands
 
-| Comando | Realm | Acesso | Descrição |
+| Command | Realm | Access | Description |
 |---|---|---|---|
-| `duck_ach_debug 1` | SERVER | Todos | Ativa logs de debug no console |
-| `duck_ach_setentid <entIndex> <entId>` | SERVER | Superadmin | Define manualmente o EntId de uma entidade pelo índice |
-| `!conquistas` (chat) | CLIENT | Todos | Abre o menu de conquistas |
-| `!achmin` (chat) | CLIENT | Superadmin | Abre o painel de administração |
+| `duck_ach_debug 1` | SERVER | Everyone | Enables debug logging in the console |
+| `duck_ach_setentid <entIndex> <entId>` | SERVER | Superadmin | Manually sets an entity's EntId by index |
+| `!achievements` (chat) | CLIENT | Everyone | Opens the achievements menu |
+| `!achmin` (chat) | CLIENT | Superadmin | Opens the admin panel |
 
-### Integração com entidades via código
+### Integrating entities via code
 
-Para marcar uma entidade de um addon próprio sem usar a stool:
+To mark an entity from your own addon without using the stool:
 
 ```lua
--- SERVER: em qualquer entidade válida
-ent:SetNWString("DuckAch_EntId", "meu_addon_porta_1")
+-- SERVER: on any valid entity
+ent:SetNWString("DuckAch_EntId", "my_addon_door_1")
 
--- Quando o jogador apertar E nela, o sistema dispara automaticamente.
--- Para triggerar manualmente (ex: por outro evento):
-DuckAch.API.TriggerInteract(ply, "meu_addon_porta_1")
+-- When the player presses E on it, the system fires automatically.
+-- To trigger it manually (e.g. from another event):
+DuckAch.API.TriggerInteract(ply, "my_addon_door_1")
 ```
