@@ -148,8 +148,13 @@ local function setupHooks()
                     end
                 end
 
-                --// headshot_airborne: victim airborne (not touching the ground)
-                if HasAnyOfType("headshot_airborne") and victim:GetGroundEntity() == NULL then
+                --// headshot_airborne: victim airborne (not touching the ground or water)
+                --// and killed by a headshot
+                if HasAnyOfType("headshot_airborne")
+                    and victim:GetGroundEntity() == NULL
+                    and victim:WaterLevel() == 0
+                    and victim:LastHitGroup() == HITGROUP_HEAD
+                then
                     for _, ach in ipairs(GetByType("headshot_airborne")) do
                         if not atkProfile:hasAchievement(ach.id) then
                             api.Grant(attacker, ach.id)
