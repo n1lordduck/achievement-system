@@ -20,7 +20,7 @@ function DuckAch.Registry.Register(def)
     _byType[ach.triggerType] = _byType[ach.triggerType] or {}
     table.insert(_byType[ach.triggerType], ach)
 
-    DuckAchLogger.debug("Registrada: " .. ach.id)
+    DuckAchLogger.debug("Registered: " .. ach.id)
     return true
 end
 
@@ -66,11 +66,11 @@ function DuckAch.Registry.Remove(id)
 end
 
 --// Serializes every achievement to send to the client (respects secret)
-function DuckAch.Registry.SerializeForPlayer(profile)
+function DuckAch.Registry.SerializeForPlayer(profile, ply)
     local out = {}
     for id, ach in pairs(_byId) do
         local hasIt = profile and profile:hasAchievement(id)
-        out[id] = ach:getPublicView(hasIt)
+        out[id] = ach:getPublicView(hasIt, ply)
     end
     return out
 end

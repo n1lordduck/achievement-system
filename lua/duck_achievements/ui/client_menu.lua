@@ -821,7 +821,7 @@ function DuckAch.UI.OpenMenu()
     _onPageChange = function(page, maxPages, total)
         _currentPage = page
         _maxPages    = maxPages
-        _pageLabel   = page .. "/" .. maxPages
+        _pageLabel   = DuckAch.L("menu.page_info", page, maxPages)
         pageInfoPanel:InvalidateLayout(true)
     end
 

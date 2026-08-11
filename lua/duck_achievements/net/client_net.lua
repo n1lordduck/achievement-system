@@ -58,7 +58,7 @@ net.Receive("DuckAch.SendUnlock", function()
     local view = util.JSONToTable(json)
     if not view then return end
 
-    --// Atualiza ou insere conquista no cache local
+    --// Updates or inserts the achievement in the local cache
     local existing = DuckAch.Client.achievements[view.id]
     if existing then
         existing.locked      = false

@@ -19,7 +19,7 @@
 --//   3. Fallback    -> the default language's preset (en), then the key itself
 --//
 --// Usage:  DuckAch.L("menu.title")
---//         DuckAch.L("menu.page_info", page, totalPages, totalCount)
+--//         DuckAch.L("menu.page_info", page, totalPages)
 
 DuckAch = DuckAch or {}
 DuckAch.Lang = DuckAch.Lang or {}
@@ -145,7 +145,7 @@ Lang.RegisterPreset("en", {
     ["menu.badge_locked"]          = "LOCKED",
     ["menu.requirements"]          = "REQUIREMENTS",
     ["menu.percent_have_players"]  = "%.1f%% of players have this achievement",
-    ["menu.page_info"]             = "Page %d / %d  (%d achievements)",
+    ["menu.page_info"]             = "%d / %d",
     ["filter.rarity.all"]          = "ALL",
     ["filter.rarity.common"]       = "COMMON",
     ["filter.rarity.uncommon"]     = "UNCOMMON",
@@ -173,6 +173,8 @@ Lang.RegisterPreset("en", {
     ["chat.prefix"]                = "[Achievements]",
     ["chat.secret_got_named"]      = " unlocked a secret achievement: ",
     ["chat.secret_got_hidden"]     = " unlocked a secret achievement!",
+    ["achievement.secret_name"]        = "???",
+    ["achievement.secret_description"] = "Secret achievement. Figure out how to unlock it.",
     ["chat.unlocked"]              = " unlocked: ",
 
     -- profile
@@ -186,6 +188,8 @@ Lang.RegisterPreset("en", {
     ["profile.clear_cache"]        = "CLEAR CACHE",
     ["profile.reset_confirm"]      = "CONFIRM RESET? (click again)",
     ["profile.reset_progress"]     = "RESET PROGRESS",
+    ["profile.reset_done"]         = "[DuckAch] Progress reset. Your unlocked achievements were kept.",
+    ["profile.kd_ratio"]           = "K/D",
 
     -- admin panel chrome
     ["admin.panel_title"]          = "ADMIN · ACHIEVEMENTS",
@@ -204,6 +208,12 @@ Lang.RegisterPreset("en", {
     ["admin.remove"]               = "✕ REMOVE",
     ["admin.add_sub_requirement"]  = "+  ADD SUB-REQUIREMENT",
     ["admin.select_entity_world"]  = "⊕  SELECT ENTITY IN WORLD",
+    ["admin.picker_link_prompt"]   = "[DuckAch Admin] Left click an entity to link it to achievement %s. Right click = check current ID.",
+    ["admin.picker_warning_prop"]  = "[DuckAch] WARNING: This is a spawned prop. The link will NOT persist across server restarts.",
+    ["admin.picker_warning_permaprops"] = "[DuckAch] Use the PermaProp addon to make it permanent before linking.",
+    ["admin.picker_id_known"]      = "[DuckAch] ID: %s",
+    ["admin.picker_id_unknown"]    = "[DuckAch] No ID yet. Left click to set one.",
+    ["admin.picker_no_permission"] = "[DuckAch] You don't have permission to use this tool.",
     ["admin.set_id_first"]         = "[DuckAch] Set the ID first.",
     ["admin.save_achievement"]     = "✓  SAVE ACHIEVEMENT",
     ["admin.id_name_required"]     = "[DuckAch] ID and Name are required.",
@@ -261,6 +271,21 @@ Lang.RegisterPreset("en", {
     ["admin.lang_selector_title"]  = "SERVER DEFAULT LANGUAGE",
     ["admin.lang_selector_hint"]   = "This applies to EVERY player on the server who has not picked a personal language in their own Profile.",
     ["admin.lang_current_status"]  = "The server default is currently set to: %s",
+    ["admin.noscope_button"]       = "NOSCOPE",
+    ["admin.noscope_title"]        = "NOSCOPE 360 - VALID WEAPONS",
+    ["admin.noscope_subtitle"]     = "Choose which weapons count for the Noscope 360 achievement.",
+    ["admin.noscope_search_placeholder"] = "Search weapon...",
+    ["admin.noscope_save"]         = "SAVE",
+    ["admin.noscope_empty"]        = "No weapons found on this server.",
+    ["admin.noscope_saved"]        = "Noscope weapon list saved.",
+    ["admin.erase_all_profiles_done"] = "[DuckAch] All profiles erased (%d players).",
+    ["admin.erase_everything_done"]   = "[DuckAch] Everything erased: profiles, custom achievements, marked entities.",
+    ["admin.grant_all_done"]          = "[DuckAch] %d achievement(s) granted to %s.",
+
+    -- generic dialog buttons
+    ["common.yes"]                 = "Yes",
+    ["common.cancel"]              = "Cancel",
+    ["common.ok"]                  = "OK",
 
     -- progress sub-labels (BuildProgress on the server)
     ["sublabel.reach_playtime_hours"]   = "Playtime hours",
@@ -283,7 +308,7 @@ Lang.RegisterPreset("pt-br", {
     ["menu.badge_locked"]          = "BLOQUEADA",
     ["menu.requirements"]          = "REQUISITOS",
     ["menu.percent_have_players"]  = "%.1f%% dos jogadores possuem esta conquista",
-    ["menu.page_info"]             = "Pagina %d / %d  (%d conquistas)",
+    ["menu.page_info"]             = "%d / %d",
     ["filter.rarity.all"]          = "TODAS",
     ["filter.rarity.common"]       = "COMUM",
     ["filter.rarity.uncommon"]     = "INCOMUM",
@@ -308,6 +333,8 @@ Lang.RegisterPreset("pt-br", {
     ["chat.prefix"]                = "[Conquistas]",
     ["chat.secret_got_named"]      = " pegou uma conquista secreta: ",
     ["chat.secret_got_hidden"]     = " pegou uma conquista secreta!",
+    ["achievement.secret_name"]        = "???",
+    ["achievement.secret_description"] = "Conquista secreta. Descubra como desbloqueá-la.",
     ["chat.unlocked"]              = " desbloqueou: ",
 
     ["profile.kills"]              = "KILLS",
@@ -320,6 +347,8 @@ Lang.RegisterPreset("pt-br", {
     ["profile.clear_cache"]        = "LIMPAR CACHE",
     ["profile.reset_confirm"]      = "CONFIRMAR RESET? (clique de novo)",
     ["profile.reset_progress"]     = "RESETAR PROGRESSO",
+    ["profile.reset_done"]         = "[DuckAch] Progresso resetado. Suas conquistas desbloqueadas foram mantidas.",
+    ["profile.kd_ratio"]           = "K/D",
 
     ["admin.panel_title"]          = "ADMIN · CONQUISTAS",
     ["admin.tab_achievements"]     = "CONQUISTAS",
@@ -337,6 +366,12 @@ Lang.RegisterPreset("pt-br", {
     ["admin.remove"]               = "✕ REMOVER",
     ["admin.add_sub_requirement"]  = "+  ADICIONAR SUB-REQUISITO",
     ["admin.select_entity_world"]  = "⊕  SELECIONAR ENTIDADE NO MUNDO",
+    ["admin.picker_link_prompt"]   = "[DuckAch Admin] Clique com o botão esquerdo em uma entidade para vinculá-la à conquista %s. Botão direito = ver o ID atual.",
+    ["admin.picker_warning_prop"]  = "[DuckAch] AVISO: Isso é um prop spawnado. O vínculo NÃO vai persistir após reiniciar o servidor.",
+    ["admin.picker_warning_permaprops"] = "[DuckAch] Use o addon PermaProp para torná-lo permanente antes de vincular.",
+    ["admin.picker_id_known"]      = "[DuckAch] ID: %s",
+    ["admin.picker_id_unknown"]    = "[DuckAch] Ainda sem ID. Clique com o botão esquerdo para definir um.",
+    ["admin.picker_no_permission"] = "[DuckAch] Você não tem permissão para usar essa ferramenta.",
     ["admin.set_id_first"]         = "[DuckAch] Defina o ID primeiro.",
     ["admin.save_achievement"]     = "✓  SALVAR CONQUISTA",
     ["admin.id_name_required"]     = "[DuckAch] ID e Nome são obrigatórios.",
@@ -393,6 +428,20 @@ Lang.RegisterPreset("pt-br", {
     ["admin.lang_selector_title"]  = "IDIOMA PADRÃO DO SERVIDOR",
     ["admin.lang_selector_hint"]   = "Isso vale pra TODO jogador do servidor que não escolheu um idioma pessoal no próprio Profile dele.",
     ["admin.lang_current_status"]  = "O idioma padrão do servidor está definido como: %s",
+    ["admin.noscope_button"]       = "NOSCOPE",
+    ["admin.noscope_title"]        = "NOSCOPE 360 - ARMAS VÁLIDAS",
+    ["admin.noscope_subtitle"]     = "Escolha quais armas contam para a conquista Noscope 360.",
+    ["admin.noscope_search_placeholder"] = "Buscar arma...",
+    ["admin.noscope_save"]         = "SALVAR",
+    ["admin.noscope_empty"]        = "Nenhuma arma encontrada neste servidor.",
+    ["admin.noscope_saved"]        = "Lista de armas do noscope salva.",
+    ["admin.erase_all_profiles_done"] = "[DuckAch] Todos os perfis foram apagados (%d jogadores).",
+    ["admin.erase_everything_done"]   = "[DuckAch] Tudo apagado: perfis, conquistas customizadas, entidades marcadas.",
+    ["admin.grant_all_done"]          = "[DuckAch] %d conquista(s) concedida(s) a %s.",
+
+    ["common.yes"]                 = "Sim",
+    ["common.cancel"]              = "Cancelar",
+    ["common.ok"]                  = "OK",
 
     ["sublabel.reach_playtime_hours"]   = "Horas de playtime",
     ["sublabel.total_kills_x"]          = "Total de kills",
@@ -414,7 +463,7 @@ Lang.RegisterPreset("es", {
     ["menu.badge_locked"]          = "BLOQUEADO",
     ["menu.requirements"]          = "REQUISITOS",
     ["menu.percent_have_players"]  = "%.1f%% de los jugadores tienen este logro",
-    ["menu.page_info"]             = "Página %d / %d  (%d logros)",
+    ["menu.page_info"]             = "%d / %d",
     ["filter.rarity.all"]          = "TODAS",
     ["filter.rarity.common"]       = "COMÚN",
     ["filter.rarity.uncommon"]     = "POCO COMÚN",
@@ -439,6 +488,8 @@ Lang.RegisterPreset("es", {
     ["chat.prefix"]                = "[Logros]",
     ["chat.secret_got_named"]      = " desbloqueó un logro secreto: ",
     ["chat.secret_got_hidden"]     = " ¡desbloqueó un logro secreto!",
+    ["achievement.secret_name"]        = "???",
+    ["achievement.secret_description"] = "Logro secreto. Descubre cómo desbloquearlo.",
     ["chat.unlocked"]              = " desbloqueó: ",
 
     ["profile.kills"]              = "BAJAS",
@@ -451,6 +502,8 @@ Lang.RegisterPreset("es", {
     ["profile.clear_cache"]        = "LIMPIAR CACHÉ",
     ["profile.reset_confirm"]      = "¿CONFIRMAR REINICIO? (clic de nuevo)",
     ["profile.reset_progress"]     = "REINICIAR PROGRESO",
+    ["profile.reset_done"]         = "[DuckAch] Progreso reiniciado. Tus logros desbloqueados se mantuvieron.",
+    ["profile.kd_ratio"]           = "K/D",
 
     ["admin.panel_title"]          = "ADMIN · LOGROS",
     ["admin.tab_achievements"]     = "LOGROS",
@@ -468,6 +521,12 @@ Lang.RegisterPreset("es", {
     ["admin.remove"]               = "✕ QUITAR",
     ["admin.add_sub_requirement"]  = "+  AGREGAR SUB-REQUISITO",
     ["admin.select_entity_world"]  = "⊕  SELECCIONAR ENTIDAD EN EL MUNDO",
+    ["admin.picker_link_prompt"]   = "[DuckAch Admin] Clic izquierdo en una entidad para vincularla al logro %s. Clic derecho = ver el ID actual.",
+    ["admin.picker_warning_prop"]  = "[DuckAch] ADVERTENCIA: Esto es un prop generado. El vínculo NO persistirá tras reiniciar el servidor.",
+    ["admin.picker_warning_permaprops"] = "[DuckAch] Usa el addon PermaProp para hacerlo permanente antes de vincularlo.",
+    ["admin.picker_id_known"]      = "[DuckAch] ID: %s",
+    ["admin.picker_id_unknown"]    = "[DuckAch] Todavía no tiene ID. Clic izquierdo para asignar uno.",
+    ["admin.picker_no_permission"] = "[DuckAch] No tienes permiso para usar esta herramienta.",
     ["admin.set_id_first"]         = "[DuckAch] Define el ID primero.",
     ["admin.save_achievement"]     = "✓  GUARDAR LOGRO",
     ["admin.id_name_required"]     = "[DuckAch] ID y Nombre son obligatorios.",
@@ -524,6 +583,20 @@ Lang.RegisterPreset("es", {
     ["admin.lang_selector_title"]  = "IDIOMA PREDETERMINADO DEL SERVIDOR",
     ["admin.lang_selector_hint"]   = "Esto aplica a TODOS los jugadores del servidor que no hayan elegido un idioma personal en su propio Profile.",
     ["admin.lang_current_status"]  = "El idioma predeterminado del servidor está en: %s",
+    ["admin.noscope_button"]       = "NOSCOPE",
+    ["admin.noscope_title"]        = "NOSCOPE 360 - ARMAS VÁLIDAS",
+    ["admin.noscope_subtitle"]     = "Elige qué armas cuentan para el logro Noscope 360.",
+    ["admin.noscope_search_placeholder"] = "Buscar arma...",
+    ["admin.noscope_save"]         = "GUARDAR",
+    ["admin.noscope_empty"]        = "No se encontraron armas en este servidor.",
+    ["admin.noscope_saved"]        = "Lista de armas del noscope guardada.",
+    ["admin.erase_all_profiles_done"] = "[DuckAch] Todos los perfiles fueron borrados (%d jugadores).",
+    ["admin.erase_everything_done"]   = "[DuckAch] Todo borrado: perfiles, logros personalizados, entidades marcadas.",
+    ["admin.grant_all_done"]          = "[DuckAch] %d logro(s) otorgado(s) a %s.",
+
+    ["common.yes"]                 = "Sí",
+    ["common.cancel"]              = "Cancelar",
+    ["common.ok"]                  = "OK",
 
     ["sublabel.reach_playtime_hours"]   = "Horas de juego",
     ["sublabel.total_kills_x"]          = "Total de bajas",

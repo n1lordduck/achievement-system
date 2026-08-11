@@ -83,7 +83,7 @@ local function buildProfileContent(parent, targetPly, W, H)
         local statDefs = {
             { label = DuckAch.L("profile.kills"),  val = tostring(kills) },
             { label = DuckAch.L("profile.deaths"), val = tostring(deaths) },
-            { label = "K/D",    val = kd },
+            { label = DuckAch.L("profile.kd_ratio"), val = kd },
         }
 
         local cw = math.floor(w / #statDefs)

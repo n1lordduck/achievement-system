@@ -198,7 +198,7 @@ local function buildEditForm(parent, existingDef, onSave)
     paramContainer.Paint = function() end
 
     --// Sub-requirement state (only for triggerType = multi_requirement)
-    --// Cada entrada: { type = "total_kills_x", params = { kills = 5000 }, label = "..." }
+    --// Each entry: { type = "total_kills_x", params = { kills = 5000 }, label = "..." }
     local SUB_REQ_TYPES = {
         "reach_playtime_hours", "total_kills_x", "total_killbind_x",
         "spawn_x_entity_y_times", "kill_x_with_weapon",
@@ -269,7 +269,7 @@ local function buildEditForm(parent, existingDef, onSave)
         for idx, sub in ipairs(_subRequirements) do
             local _idx = idx
             local subFieldsForHeight = SUB_REQ_PARAM_FIELDS[sub.type] or {}
-            --// header (combo + remover) + N campos (label + entry + respiro) + padding inferior
+            --// header (combo + remove) + N fields (label + entry + spacing) + bottom padding
             local HEADER_H    = 38
             local FIELD_H     = 52   --// 16 (label) + 26 (entry) + 10 (respiro entre campos)
             local BOTTOM_PAD  = 14
@@ -552,11 +552,11 @@ local function buildWebhookCards()
         local deleteBtn = actionBtn(card, lw - (btnW + 10), math.floor((rowH - btnH) * 0.5), btnW, btnH,
             DuckAch.L("admin.webhook_delete"), C.red, function()
                 Derma_Query(DuckAch.L("admin.webhook_delete_confirm"), DuckAch.L("admin.webhook_title"),
-                    "Yes", function()
+                    DuckAch.L("common.yes"), function()
                         net.Start("DuckAch.Admin.Webhook.Remove")
                             net.WriteString(_wh.id)
                         net.SendToServer()
-                    end, "Cancel", function() end)
+                    end, DuckAch.L("common.cancel"), function() end)
             end)
 
         y = y + rowH + gap
@@ -617,7 +617,7 @@ local function openWebhookSettings()
         net.SendToServer()
         urlEntry:SetValue("")
         if not _webhookReqwestAvailable then
-            Derma_Message(DuckAch.L("admin.webhook_reqwest_missing"), DuckAch.L("admin.webhook_title"), "OK")
+            Derma_Message(DuckAch.L("admin.webhook_reqwest_missing"), DuckAch.L("admin.webhook_title"), DuckAch.L("common.ok"))
         end
     end)
 
@@ -668,7 +668,7 @@ local function openWebhookSettings()
         if not IsValid(win) then return end
         if not ok then
             local msg = err == "invalid_url" and DuckAch.L("admin.webhook_invalid_url") or DuckAch.L("admin.webhook_action_failed")
-            Derma_Message(msg, DuckAch.L("admin.webhook_title"), "OK")
+            Derma_Message(msg, DuckAch.L("admin.webhook_title"), DuckAch.L("common.ok"))
         end
     end)
 

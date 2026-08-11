@@ -171,7 +171,7 @@ end
 
 function DuckAch.Net.SendFullData(ply)
     local profile  = DuckAch.Data.GetProfile(ply)
-    local achViews = DuckAch.Registry.SerializeForPlayer(profile)
+    local achViews = DuckAch.Registry.SerializeForPlayer(profile, ply)
     local stats    = {}
     for id in pairs(achViews) do
         local s = DuckAch.API.GetStats(id)
@@ -279,7 +279,7 @@ net.Receive("DuckAch.Admin.RequestList", function(_, ply)
     net.Send(ply)
 end)
 
---// Picker: equipa a stool no jogador e registra o achId pendente
+--// Picker: equips the stool on the player and registers the pending achId
 net.Receive("DuckAch.Admin.SetEntId", function(_, ply)
     if not isSuperAdmin(ply) then return end
     local achId = net.ReadString()
@@ -400,5 +400,5 @@ net.Receive("DuckAch.ResetProgress", function(_, ply)
     DuckAch.Net.SendFullData(ply)
 
     DuckAchLogger.info("Progress reset for: " .. ply:Name())
-    ply:ChatPrint("[DuckAch] Progress reset. Your unlocked achievements were kept.")
+    ply:ChatPrint(DuckAch.LFor(ply, "profile.reset_done"))
 end)

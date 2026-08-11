@@ -2,6 +2,15 @@ TOOL.Category    = "Duck Achievements"
 TOOL.Name        = "Entity Picker"
 TOOL.Information = { { name = "left" }, { name = "right" } }
 
+--// Admin-only: links world entities to achievement definitions and to
+--// marked_entities.txt persistence. Never let a non-superadmin trigger this.
+local function isSuperAdmin(ply)
+    for _, g in ipairs(DuckAch.Config.SuperadminGroups) do
+        if ply:IsUserGroup(g) or ply:IsSuperAdmin() then return true end
+    end
+    return false
+end
+
 --// Generates a robust, unique entId for any entity:
 --// Map entities use MapCreationID (stable across restarts).
 --// Spawned props use a hash of: spawn time, entIndex, owner steamid,
@@ -30,10 +39,15 @@ function TOOL:LeftClick(trace)
     if not IsValid(ent) or ent:IsPlayer() then return false end
 
     if SERVER then
+        local ply = self:GetOwner()
+        if not isSuperAdmin(ply) then
+            ply:ChatPrint(DuckAch.LFor(ply, "admin.picker_no_permission"))
+            return false
+        end
+
         local mapId    = ent:MapCreationID()
         local isMapEnt = mapId and mapId ~= -1
         local entId    = makeEntId(ent)
-        local ply      = self:GetOwner()
 
         ent:SetNWString("DuckAch_EntId", entId)
 
@@ -42,8 +56,8 @@ function TOOL:LeftClick(trace)
             ent:SetColor(Color(80, 220, 120))
         else
             ent:SetColor(Color(255, 160, 40))
-            ply:ChatPrint("[DuckAch] WARNING: This is a spawned prop. The link will NOT persist across server restarts.")
-            ply:ChatPrint("[DuckAch] Use the PermaProp addon to make it permanent before linking.")
+            ply:ChatPrint(DuckAch.LFor(ply, "admin.picker_warning_prop"))
+            ply:ChatPrint(DuckAch.LFor(ply, "admin.picker_warning_permaprops"))
         end
 
         timer.Simple(2, function()
@@ -63,9 +77,15 @@ end
 function TOOL:RightClick(trace)
     local ent = trace.Entity
     if not IsValid(ent) or not SERVER then return false end
+    local ply = self:GetOwner()
+    if not isSuperAdmin(ply) then
+        ply:ChatPrint(DuckAch.LFor(ply, "admin.picker_no_permission"))
+        return false
+    end
+
     local entId = ent:GetNWString("DuckAch_EntId", "")
-    local msg   = entId ~= "" and ("ID: " .. entId) or "No ID yet. Left click to set one."
-    self:GetOwner():ChatPrint("[DuckAch] " .. msg)
+    local msg   = entId ~= "" and DuckAch.LFor(ply, "admin.picker_id_known", entId) or DuckAch.LFor(ply, "admin.picker_id_unknown")
+    ply:ChatPrint(msg)
     return true
 end
 
@@ -77,11 +97,13 @@ if CLIENT then
             RunConsoleCommand("use", "gmod_tool")
             timer.Simple(0.1, function()
                 RunConsoleCommand("gmod_toolmode", "entity_picker")
+
+                local template       = DuckAch.L("admin.picker_link_prompt")
+                local before, after  = template:match("^(.-)%%s(.*)$")
                 chat.AddText(
-                    Color(193, 235, 233), "[DuckAch Admin] ",
-                    Color(220, 220, 220), "Left click an entity to link it to achievement ",
+                    Color(220, 220, 220), before or template,
                     Color(255, 200, 50), achId,
-                    Color(220, 220, 220), ". Right click = check current ID."
+                    Color(220, 220, 220), after or ""
                 )
             end)
         end)

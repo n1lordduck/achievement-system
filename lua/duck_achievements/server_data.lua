@@ -122,9 +122,8 @@ concommand.Add("duckachiv_erase_all_profiles", function(ply, cmd, args)
     _profiles = {}
     DuckAch.Data.Save()
 
-    local msg = "[DuckAch] All profiles erased (" .. count .. " players)."
-    DuckAchLogger.info(msg)
-    if not isConsole then ply:ChatPrint(msg) end
+    DuckAchLogger.info("All profiles erased (" .. count .. " players).")
+    if not isConsole then ply:ChatPrint(DuckAch.LFor(ply, "admin.erase_all_profiles_done", count)) end
 
     --// Resend zeroed-out data to whoever's online
     for _, p in ipairs(player.GetAll()) do
@@ -166,9 +165,8 @@ concommand.Add("duckachiv_erase_everything", function(ply, cmd, args)
     --// Rebuild hooks (no achievements left, removes all of them)
     hook.Run("AchievementSystem.Admin.HooksRebuild")
 
-    local msg = "[DuckAch] Everything erased: profiles, custom achievements, marked entities."
-    DuckAchLogger.info(msg)
-    if not isConsole then ply:ChatPrint(msg) end
+    DuckAchLogger.info("Everything erased: profiles, custom achievements, marked entities.")
+    if not isConsole then ply:ChatPrint(DuckAch.LFor(ply, "admin.erase_everything_done")) end
 
     --// Resend zeroed-out data to everyone
     for _, p in ipairs(player.GetAll()) do
@@ -213,7 +211,6 @@ concommand.Add("duckachiv_get_all", function(ply, cmd, args)
         end
     end
 
-    local msg = "[DuckAch] " .. granted .. " achievement(s) granted to " .. targetPly:Name() .. "."
-    DuckAchLogger.info(msg)
-    if not isConsole then ply:ChatPrint(msg) end
+    DuckAchLogger.info(granted .. " achievement(s) granted to " .. targetPly:Name() .. ".")
+    if not isConsole then ply:ChatPrint(DuckAch.LFor(ply, "admin.grant_all_done", granted, targetPly:Name())) end
 end)

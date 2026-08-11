@@ -51,22 +51,31 @@ function Achievement.new(def)
 end
 
 function Achievement:validate()
-    if not self.id or self.id == ""          then return false, "id ausente" end
-    if not self.name or self.name == ""      then return false, "name ausente" end
-    if not self.description                  then return false, "description ausente" end
+    if not self.id or self.id == ""          then return false, "id missing" end
+    if not self.name or self.name == ""      then return false, "name missing" end
+    if not self.description                  then return false, "description missing" end
     if not DuckAch.Rarities[self.rarity]     then return false, "invalid rarity: " .. tostring(self.rarity) end
-    if not self.triggerType                  then return false, "triggerType ausente" end
+    if not self.triggerType                  then return false, "triggerType missing" end
     if not VALID_TYPES[self.triggerType]     then return false, "unknown triggerType: " .. self.triggerType end
 
     return true
 end
 
-function Achievement:getPublicView(playerHasIt)
+function Achievement:getPublicView(playerHasIt, ply)
     if self.secret and not playerHasIt then
+        local name, description
+        if SERVER and IsValid(ply) then
+            name        = DuckAch.LFor(ply, "achievement.secret_name")
+            description = DuckAch.LFor(ply, "achievement.secret_description")
+        else
+            name        = DuckAch.L("achievement.secret_name")
+            description = DuckAch.L("achievement.secret_description")
+        end
+
         return {
             id          = self.id,
-            name        = "???",
-            description = "Secret achievement. Figure out how to unlock it.",
+            name        = name,
+            description = description,
             rarity      = self.rarity,
             thumbnail   = nil,
             secret      = true,
