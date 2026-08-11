@@ -614,12 +614,10 @@ local function setupHooks()
     end
 
     if HasAnyOfType("noscope_360_kill") then
-        local SNIPER_WEAPONS = {
-            ["m9k_intervention"] = true,
-            ["m9k_barret_m82"]   = true,
-            ["m9k_m98b"]         = true,
-            ["m9k_m24"]          = true,
-        }
+        --// Which weapon classes count for this achievement - admin-editable,
+        --// see admin/server_admin.lua's DuckAch.Admin.NoscopeWeapons. Referenced
+        --// directly (not copied) so admin panel changes take effect live.
+        local SNIPER_WEAPONS = DuckAch.Admin.NoscopeWeapons
 
         local _lastShotYaw  = {}
         local _yawAccum     = {}

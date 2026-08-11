@@ -58,6 +58,7 @@ All under `data/duck_achievements/`:
 | `custom_achievements.txt` | `admin/server_admin.lua` | pretty-printed JSON, one entry per admin-created achievement definition |
 | `marked_entities.txt` | `admin/server_admin.lua` | `{mapName: {mapCreationId: entId}}`, restored on `InitPostEntity` so world-entity bindings survive restarts |
 | `lang_data.txt` | `server_lang.lua` | `{active, overrides}` - the server's chosen language + every per-key admin edit |
+| `noscope_weapons.txt` | `admin/server_admin.lua` | JSON array of weapon classes that count for `noscope_360_kill`. Defaults to the M9K sniper rifles on first boot, then whatever the admin picks in `!achmin` -> NOSCOPE |
 | `thumbnails/<crc>.dat` | `server_thumbnails.lua` | raw downloaded image bytes, keyed by CRC of the URL |
 
 Client-side (per-player, on their own machine, survive across servers): `duckach_lang_pref.txt` (personal language override) and `duck_achievements_pin.txt` (pinned achievements).

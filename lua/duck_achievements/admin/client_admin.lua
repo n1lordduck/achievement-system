@@ -676,6 +676,139 @@ local function openWebhookSettings()
     net.SendToServer()
 end
 
+--// Noscope 360 weapon whitelist picker
+local _noscopePanel      = nil
+local _noscopeListPanel  = nil
+local _noscopeAll        = {}   --// { {class=, name=}, ... } every weapon on the server
+local _noscopeSelected   = {}   --// working copy: class -> true, edited locally, sent on SAVE
+
+local function checkboxRow(parent, y, w, name, class, checked)
+    local row = vgui.Create("DButton", parent)
+    row:SetPos(0, y)
+    row:SetSize(w, 26)
+    row:SetText("")
+
+    local state = checked
+
+    row.Paint = function(self, rw, rh)
+        if self:IsHovered() then fill(0, 0, rw, rh, C.accent, 14) end
+
+        local boxCol = state and C.success or C.muted
+        out(4, 5, 16, 16, boxCol, state and 220 or 100)
+        if state then fill(6, 7, 12, 12, C.success, 200) end
+
+        DuckAch.drawText(name, "DA_Sub", 28, math.floor(rh * 0.5), C.cream, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        DuckAch.drawText(class, "DA_Tiny", rw - 8, math.floor(rh * 0.5), C.muted, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+    end
+
+    row.DoClick = function()
+        state = not state
+        if state then _noscopeSelected[class] = true else _noscopeSelected[class] = nil end
+    end
+
+    return row
+end
+
+local function buildNoscopeRows(filter)
+    if not IsValid(_noscopeListPanel) then return end
+    _noscopeListPanel:Clear()
+
+    filter = (filter or ""):lower()
+    local lw = _noscopeListPanel:GetWide()
+    local y  = 0
+
+    local shown = 0
+    for _, w in ipairs(_noscopeAll) do
+        if filter == "" or w.name:lower():find(filter, 1, true) or w.class:lower():find(filter, 1, true) then
+            checkboxRow(_noscopeListPanel, y, lw, w.name, w.class, _noscopeSelected[w.class] == true)
+            y = y + 26
+            shown = shown + 1
+        end
+    end
+
+    if shown == 0 then
+        local empty = vgui.Create("DPanel", _noscopeListPanel)
+        empty:SetPos(0, 0)
+        empty:SetSize(lw, 28)
+        empty.Paint = function(self, w, h)
+            DuckAch.drawText(DuckAch.L("admin.noscope_empty"), "DA_Sub", 0, 0, C.muted)
+        end
+        y = 28
+    end
+
+    _noscopeListPanel:SetTall(math.max(y, 1))
+end
+
+local function openNoscopeSettings()
+    if IsValid(_noscopePanel) then _noscopePanel:Close() end
+
+    local W, H = 420, 520
+    local win = vgui.Create("DFrame")
+    win:SetSize(W, H)
+    win:Center()
+    win:SetTitle("")
+    win:SetDraggable(true)
+    win:MakePopup()
+    win.btnClose:SetSize(0, 0)
+    win.btnClose.Paint = function() end
+    win.btnMinim:SetSize(0, 0)
+    win.btnMinim.Paint = function() end
+    win.btnMaxim:SetSize(0, 0)
+    win.btnMaxim.Paint = function() end
+    _noscopePanel = win
+
+    win.Paint = function(self, w, h)
+        fill(0, 0, w, h, C.bg)
+        fill(0, 0, w, 3, C.amber, 200)
+        out(0, 0, w, h, C.border)
+        DuckAch.drawText(DuckAch.L("admin.noscope_title"), "DA_Title", 14, 14, C.amber)
+    end
+
+    local closeBtn = vgui.Create("DButton", win)
+    closeBtn:SetPos(W - 28, 8)
+    closeBtn:SetSize(20, 20) closeBtn:SetText("")
+    closeBtn.Paint = function(self, w, h)
+        if self:IsHovered() then fill(0, 0, w, h, C.red, 60) end
+        out(0, 0, w, h, C.red, self:IsHovered() and 180 or 70)
+        DuckAch.drawText("✕", "DA_Btn", math.floor(w * 0.5), math.floor(h * 0.5),
+            Color(C.red.r, C.red.g, C.red.b, self:IsHovered() and 255 or 160),
+            TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+    closeBtn.DoClick = function() win:Close() end
+
+    local subLabel = vgui.Create("DPanel", win)
+    subLabel:SetPos(14, 40) subLabel:SetSize(W - 28, 32)
+    subLabel.Paint = function(self, w, h)
+        local lines = wrapTextLines(DuckAch.L("admin.noscope_subtitle"), "DA_Tiny", w)
+        for i, line in ipairs(lines) do
+            DuckAch.drawText(line, "DA_Tiny", 0, (i - 1) * 14, C.muted)
+        end
+    end
+
+    local searchEntry = styledEntry(win, 14, 76, W - 28, 26, DuckAch.L("admin.noscope_search_placeholder"))
+    searchEntry.OnValueChange = function(self) buildNoscopeRows(self:GetValue()) end
+
+    local scroll = vgui.Create("DScrollPanel", win)
+    scroll:SetPos(14, 110)
+    scroll:SetSize(W - 28, H - 110 - 14 - 34)
+    _noscopeListPanel = scroll
+    buildNoscopeRows("")
+
+    actionBtn(win, 14, H - 34, W - 28, 26, DuckAch.L("admin.noscope_save"), C.success, function()
+        local list = {}
+        for class in pairs(_noscopeSelected) do table.insert(list, class) end
+
+        net.Start("DuckAch.Admin.NoscopeWeapons.Set")
+            net.WriteString(util.TableToJSON(list))
+        net.SendToServer()
+
+        Derma_Message(DuckAch.L("admin.noscope_saved"), DuckAch.L("admin.noscope_title"), DuckAch.L("common.ok"))
+    end)
+
+    net.Start("DuckAch.Admin.NoscopeWeapons.RequestList")
+    net.SendToServer()
+end
+
 function DuckAch.UI.OpenAdmin()
     if not isSuperAdmin() then return end
     if _adminOpen then return end
@@ -744,6 +877,18 @@ function DuckAch.UI.OpenAdmin()
             Color(col.r, col.g, col.b), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
     webhookBtn.DoClick = function() openWebhookSettings() end
+
+    local noscopeBtn = vgui.Create("DButton", frame)
+    noscopeBtn:SetPos(W - 216, math.floor((topY - 20) * 0.5))
+    noscopeBtn:SetSize(88, 20) noscopeBtn:SetText("")
+    noscopeBtn.Paint = function(self, w, h)
+        local col = self:IsHovered() and C.accent or C.muted
+        fill(0, 0, w, h, col, 18)
+        out(0, 0, w, h, col, 90)
+        DuckAch.drawText(DuckAch.L("admin.noscope_button"), "DA_Btn", math.floor(w * 0.5), math.floor(h * 0.5),
+            Color(col.r, col.g, col.b), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+    noscopeBtn.DoClick = function() openNoscopeSettings() end
 
     local listScroll = vgui.Create("DScrollPanel", frame)
     listScroll:SetPos(8, topY) listScroll:SetSize(listW, H - topY - botH)
@@ -850,4 +995,16 @@ net.Receive("DuckAch.Admin.Webhook.ActionResult", function()
     local ok  = net.ReadBool()
     local err = net.ReadString()
     hook.Run("AchievementSystem.Admin.WebhookActionResult", ok, err ~= "" and err or nil)
+end)
+
+net.Receive("DuckAch.Admin.NoscopeWeapons.List", function()
+    local data = util.JSONToTable(net.ReadString()) or {}
+    _noscopeAll = data.all or {}
+
+    _noscopeSelected = {}
+    for _, class in ipairs(data.selected or {}) do
+        _noscopeSelected[class] = true
+    end
+
+    buildNoscopeRows("")
 end)

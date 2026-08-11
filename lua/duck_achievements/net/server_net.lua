@@ -29,6 +29,9 @@ addNetwork("DuckAch.Admin.Webhook.Add")
 addNetwork("DuckAch.Admin.Webhook.Remove")
 addNetwork("DuckAch.Admin.Webhook.SetEnabled")
 addNetwork("DuckAch.Admin.Webhook.ActionResult")
+addNetwork("DuckAch.Admin.NoscopeWeapons.RequestList")
+addNetwork("DuckAch.Admin.NoscopeWeapons.List")
+addNetwork("DuckAch.Admin.NoscopeWeapons.Set")
 
 hook.Add("PlayerInitialSpawn", "DuckAch.BannerSpawn", function(ply)
     timer.Simple(5, function()
@@ -331,6 +334,32 @@ net.Receive("DuckAch.Admin.Webhook.SetEnabled", function(_, ply)
     local state = net.ReadBool()
     local ok, err = DuckAch.Webhooks.SetEnabled(id, state)
     sendWebhookResult(ply, ok, err)
+end)
+
+local function sendNoscopeWeapons(ply)
+    local selected = {}
+    for class in pairs(DuckAch.Admin.NoscopeWeapons) do
+        table.insert(selected, class)
+    end
+
+    net.Start("DuckAch.Admin.NoscopeWeapons.List")
+        net.WriteString(util.TableToJSON({
+            all      = DuckAch.Admin.GetAllWeaponClasses(),
+            selected = selected,
+        }))
+    net.Send(ply)
+end
+
+net.Receive("DuckAch.Admin.NoscopeWeapons.RequestList", function(_, ply)
+    if not isSuperAdmin(ply) then return end
+    sendNoscopeWeapons(ply)
+end)
+
+net.Receive("DuckAch.Admin.NoscopeWeapons.Set", function(_, ply)
+    if not isSuperAdmin(ply) then return end
+    local list = util.JSONToTable(net.ReadString()) or {}
+    DuckAch.Admin.SetNoscopeWeapons(list)
+    sendNoscopeWeapons(ply)
 end)
 
 hook.Add("PlayerInitialSpawn", "AchievementSystem.Net.OnSpawn", function(ply)

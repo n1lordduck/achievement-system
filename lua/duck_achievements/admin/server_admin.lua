@@ -40,7 +40,7 @@ function DuckAch.Admin.LoadCustomAchievements()
     DuckAchLogger.info("Custom achievements loaded.")
 end
 
---// Inicia picker: equipa a stool no jogador e aguarda ele clicar em algo
+--// Starts the picker: equips the stool on the player and waits for them to click something
 function DuckAch.Admin.StartEntityPicker(ply, achId)
     if not IsValid(ply) then return end
     _pickerPending[ply:SteamID()] = achId
@@ -136,7 +136,7 @@ hook.Add("DuckAch.Admin.PickerSelected", "AchievementSystem.Admin.PersistEntId",
     _markedEntities[mapName] = _markedEntities[mapName] or {}
     _markedEntities[mapName][mapId] = entId
     saveMarkedEntities()
-    DuckAchLogger.debug("EntId salvo: mapa=" .. mapName .. " mapId=" .. mapId .. " entId=" .. entId)
+    DuckAchLogger.debug("EntId saved: map=" .. mapName .. " mapId=" .. mapId .. " entId=" .. entId)
 end)
 
 hook.Add("InitPostEntity", "AchievementSystem.Admin.RestoreEntIds", function()
@@ -144,3 +144,76 @@ hook.Add("InitPostEntity", "AchievementSystem.Admin.RestoreEntIds", function()
 end)
 
 loadMarkedEntities()
+
+--// Noscope 360 weapon whitelist - which weapons count for noscope_360_kill.
+--// Mutated in place (never reassigned) so hooks/server_hooks.lua can hold
+--// a direct reference and see live updates without re-reading a file.
+
+local DEFAULT_NOSCOPE_WEAPONS = {
+    "m9k_intervention",
+    "m9k_barret_m82",
+    "m9k_m98b",
+    "m9k_m24",
+}
+
+local noscopeFile = DuckAch.Config.DataDir .. "noscope_weapons.txt"
+
+DuckAch.Admin.NoscopeWeapons = {}
+
+local function saveNoscopeWeapons()
+    if not file.IsDir(DuckAch.Config.DataDir, "DATA") then
+        file.CreateDir(DuckAch.Config.DataDir)
+    end
+    local list = {}
+    for class in pairs(DuckAch.Admin.NoscopeWeapons) do
+        table.insert(list, class)
+    end
+    table.sort(list)
+    file.Write(noscopeFile, util.TableToJSON(list))
+end
+
+local function loadNoscopeWeapons()
+    table.Empty(DuckAch.Admin.NoscopeWeapons)
+
+    if file.Exists(noscopeFile, "DATA") then
+        local raw  = file.Read(noscopeFile, "DATA")
+        local list = raw and raw ~= "" and util.JSONToTable(raw) or nil
+        if list then
+            for _, class in ipairs(list) do
+                DuckAch.Admin.NoscopeWeapons[class] = true
+            end
+            DuckAchLogger.info("Noscope weapon whitelist loaded.")
+            return
+        end
+    end
+
+    for _, class in ipairs(DEFAULT_NOSCOPE_WEAPONS) do
+        DuckAch.Admin.NoscopeWeapons[class] = true
+    end
+    saveNoscopeWeapons()
+    DuckAchLogger.info("Noscope weapon whitelist initialized with M9K defaults.")
+end
+
+--// Every weapon class currently registered on the server, for the admin picker
+function DuckAch.Admin.GetAllWeaponClasses()
+    local out = {}
+    for _, swep in pairs(weapons.GetList()) do
+        if swep.ClassName then
+            table.insert(out, { class = swep.ClassName, name = swep.PrintName or swep.ClassName })
+        end
+    end
+    table.sort(out, function(a, b) return a.name < b.name end)
+    return out
+end
+
+function DuckAch.Admin.SetNoscopeWeapons(list)
+    table.Empty(DuckAch.Admin.NoscopeWeapons)
+    for _, class in ipairs(list) do
+        if isstring(class) then
+            DuckAch.Admin.NoscopeWeapons[class] = true
+        end
+    end
+    saveNoscopeWeapons()
+end
+
+loadNoscopeWeapons()
