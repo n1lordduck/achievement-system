@@ -409,7 +409,7 @@ function DuckAch.UI.ShowDetail(achId, view, unlocked, pct)
         pinBtn.Paint = function(self, w, h)
             local pinnedNow = DuckAch.UI.IsPinned(achId)
             local col = pinnedNow and C.amber or C.muted
-            DuckAch.panelBG(0, 0, w, h, math.floor(w * 0.5), col, pinnedNow and 200 or 0, col, self:IsHovered() and 220 or 130, 1)
+            DuckAch.panelBG(0, 0, w, h, 0, col, pinnedNow and 200 or 0, col, self:IsHovered() and 220 or 130, 1)
         end
         pinBtn.DoClick = function() DuckAch.UI.TogglePin(achId, view) end
     end
