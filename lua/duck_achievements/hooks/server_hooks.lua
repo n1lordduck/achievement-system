@@ -334,9 +334,25 @@ local function setupHooks()
             end
         end
 
-        hook.Add("EntityNetworkedVarChanged", "AchievementSystem.Player.TrackUsergroup", function(ent, name, old, new)
-            if name ~= "UserGroup" or not IsValid(ent) or not ent:IsPlayer() or old == new then return end
-            checkUsergroup(ent)
+        -- Player:SetUserGroup (what every admin mod actually calls) networks
+        -- "UserGroup" through the legacy NWVar system, not NW2Var, so
+        -- EntityNetworkedVarChanged never fires for it. SetNWVarProxy is the
+        -- hook that actually matches that system - only one proxy per var
+        -- per entity, so this must be the sole "UserGroup" proxy in the addon.
+        local function registerUsergroupProxy(ply)
+            if not IsValid(ply) then return end
+            ply:SetNWVarProxy("UserGroup", function(ent, name, old, new)
+                if old == new then return end
+                checkUsergroup(ent)
+            end)
+        end
+
+        for _, ply in ipairs(playerGetAll()) do
+            registerUsergroupProxy(ply)
+        end
+
+        hook.Add("PlayerInitialSpawn", "AchievementSystem.Player.TrackUsergroup", function(ply)
+            registerUsergroupProxy(ply)
         end)
 
         hook.Add("PlayerSpawn", "AchievementSystem.Player.UsergroupOnSpawn", function(ply)
@@ -707,7 +723,7 @@ local function setupHooks()
             { "PlayerDisconnected",        "AchievementSystem.Player.TrackRevenge"                },
             { "PlayerInitialSpawn",        "AchievementSystem.Player.TrackFirstJoinHour"          },
             { "OnEntityCreated",           "AchievementSystem.Entity.TrackSpawn"                  },
-            { "EntityNetworkedVarChanged", "AchievementSystem.Player.TrackUsergroup"              },
+            { "PlayerInitialSpawn",        "AchievementSystem.Player.TrackUsergroup"              },
             { "EntityTakeDamage",          "AchievementSystem.Player.TrackExplosionSurvive"       },
             { "EntityTakeDamage",          "AchievementSystem.Player.TrackPacifistDamage"         },
             { "PlayerSay",                 "AchievementSystem.Chat.Commands"                      },
