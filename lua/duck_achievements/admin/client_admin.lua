@@ -677,10 +677,25 @@ local function openWebhookSettings()
 end
 
 --// Noscope 360 weapon whitelist picker
-local _noscopePanel      = nil
-local _noscopeListPanel  = nil
-local _noscopeAll        = {}   --// { {class=, name=}, ... } every weapon on the server
-local _noscopeSelected   = {}   --// working copy: class -> true, edited locally, sent on SAVE
+local _noscopePanel        = nil
+local _noscopeListPanel    = nil
+local _noscopeAllowedPanel = nil
+local _noscopeSearchEntry  = nil
+local _noscopeAllowedSearchEntry = nil
+local _noscopeAll          = {}   --// { {class=, name=}, ... } every weapon on the server
+local _noscopeSelected     = {}   --// working copy: class -> true, edited locally, sent on SAVE
+
+local function currentNoscopeFilter()
+    return IsValid(_noscopeSearchEntry) and _noscopeSearchEntry:GetValue() or ""
+end
+
+local function currentAllowedFilter()
+    return IsValid(_noscopeAllowedSearchEntry) and _noscopeAllowedSearchEntry:GetValue() or ""
+end
+
+--// Forward-declared: checkboxRow/allowedRow each need to refresh the other
+--// list on click, and both build-functions are defined further below.
+local buildNoscopeRows, buildAllowedRows
 
 local function checkboxRow(parent, y, w, name, class, checked)
     local row = vgui.Create("DButton", parent)
@@ -704,12 +719,13 @@ local function checkboxRow(parent, y, w, name, class, checked)
     row.DoClick = function()
         state = not state
         if state then _noscopeSelected[class] = true else _noscopeSelected[class] = nil end
+        buildAllowedRows(currentAllowedFilter())
     end
 
     return row
 end
 
-local function buildNoscopeRows(filter)
+buildNoscopeRows = function(filter)
     if not IsValid(_noscopeListPanel) then return end
     _noscopeListPanel:Clear()
 
@@ -739,10 +755,127 @@ local function buildNoscopeRows(filter)
     _noscopeListPanel:SetTall(math.max(y, 1))
 end
 
+--// Compact horizontal "chip" for the currently allowed strip - click anywhere
+--// on a chip to unallow, no need to search the full list for something
+--// already selected. Chips flow left to right and wrap onto new rows, and
+--// whatever sits below the strip is repositioned to match its real height
+--// (see _noscopeRelayoutBelowAllowed) so a long allow list can never overlap
+--// the search box or the full weapon list under it.
+local _noscopeRelayoutBelowAllowed = nil
+
+local function truncateText(text, font, maxW)
+    surface.SetFont(font)
+    if surface.GetTextSize(text) <= maxW then return text end
+
+    local lo, hi = 0, #text
+    while lo < hi do
+        local mid = math.ceil((lo + hi) / 2)
+        local candidate = string.sub(text, 1, mid) .. "..."
+        if surface.GetTextSize(candidate) <= maxW then
+            lo = mid
+        else
+            hi = mid - 1
+        end
+    end
+
+    return lo > 0 and (string.sub(text, 1, lo) .. "...") or "..."
+end
+
+local function measureChipWidth(name)
+    surface.SetFont("DA_Tiny")
+    return math.Clamp(surface.GetTextSize(name) + 28, 40, 170)
+end
+
+local function allowedChip(parent, x, y, w, h, name, class)
+    local displayName = truncateText(name, "DA_Tiny", w - 20)
+
+    local chip = vgui.Create("DButton", parent)
+    chip:SetPos(x, y)
+    chip:SetSize(w, h)
+    chip:SetText("")
+
+    chip.Paint = function(self, cw, ch)
+        fill(0, 0, cw, ch, C.card)
+        out(0, 0, cw, ch, self:IsHovered() and C.red or C.border, self:IsHovered() and 180 or 100)
+        DuckAch.drawText(displayName, "DA_Tiny", 8, math.floor(ch * 0.5), C.cream, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        DuckAch.drawText("✕", "DA_Tiny", cw - 8, math.floor(ch * 0.5),
+            Color(C.red.r, C.red.g, C.red.b, self:IsHovered() and 255 or 160), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+    end
+
+    chip.DoClick = function()
+        _noscopeSelected[class] = nil
+        buildAllowedRows(currentAllowedFilter())
+        buildNoscopeRows(currentNoscopeFilter())
+    end
+
+    return chip
+end
+
+buildAllowedRows = function(filter)
+    if not IsValid(_noscopeAllowedPanel) then return end
+    _noscopeAllowedPanel:Clear()
+
+    filter = (filter or ""):lower()
+
+    local nameByClass = {}
+    for _, w in ipairs(_noscopeAll) do nameByClass[w.class] = w.name end
+
+    local totalSelected = table.Count(_noscopeSelected)
+
+    local classes = {}
+    for class in pairs(_noscopeSelected) do
+        local name = nameByClass[class] or class
+        if filter == "" or name:lower():find(filter, 1, true) or class:lower():find(filter, 1, true) then
+            table.insert(classes, class)
+        end
+    end
+    table.sort(classes, function(a, b)
+        return (nameByClass[a] or a) < (nameByClass[b] or b)
+    end)
+
+    local lw = _noscopeAllowedPanel:GetWide()
+    local chipH, gapX, gapY = 20, 6, 5
+    local x, y = 0, 0
+
+    for _, class in ipairs(classes) do
+        local name  = nameByClass[class] or class
+        local chipW = measureChipWidth(name)
+
+        if x > 0 and x + chipW > lw then
+            x = 0
+            y = y + chipH + gapY
+        end
+
+        allowedChip(_noscopeAllowedPanel, x, y, chipW, chipH, name, class)
+        x = x + chipW + gapX
+    end
+
+    local finalH = chipH
+    if #classes > 0 then
+        finalH = y + chipH
+    else
+        local empty = vgui.Create("DPanel", _noscopeAllowedPanel)
+        empty:SetPos(0, 0)
+        empty:SetSize(lw, chipH)
+        empty.Paint = function(self, w, h)
+            local msg = totalSelected == 0
+                and DuckAch.L("admin.noscope_allowed_empty")
+                or DuckAch.L("admin.noscope_empty")
+            DuckAch.drawText(msg, "DA_Tiny", 0, math.floor(h * 0.5), C.muted, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        end
+    end
+
+    _noscopeAllowedPanel:SetTall(finalH)
+
+    if _noscopeRelayoutBelowAllowed then
+        _noscopeRelayoutBelowAllowed(finalH)
+    end
+end
+
 local function openNoscopeSettings()
     if IsValid(_noscopePanel) then _noscopePanel:Close() end
 
-    local W, H = 420, 520
+    local W, H = 420, 600
     local win = vgui.Create("DFrame")
     win:SetSize(W, H)
     win:Center()
@@ -776,8 +909,29 @@ local function openNoscopeSettings()
     end
     closeBtn.DoClick = function() win:Close() end
 
+    local allowedLabel = vgui.Create("DPanel", win)
+    allowedLabel:SetPos(14, 40) allowedLabel:SetSize(W - 28, 16)
+    allowedLabel.Paint = function(self, w, h)
+        DuckAch.drawText(string.format(DuckAch.L("admin.noscope_allowed_label"), table.Count(_noscopeSelected)),
+            "DA_Badge", 0, math.floor(h * 0.5), C.amber, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    end
+
+    local allowedSearchEntry = styledEntry(win, 14, 58, W - 28, 22, DuckAch.L("admin.noscope_search_placeholder"))
+    allowedSearchEntry.OnValueChange = function(self) buildAllowedRows(self:GetValue()) end
+    _noscopeAllowedSearchEntry = allowedSearchEntry
+
+    local ALLOWED_Y = 84
+
+    local allowedScroll = vgui.Create("DScrollPanel", win)
+    allowedScroll:SetPos(14, ALLOWED_Y)
+    allowedScroll:SetSize(W - 28, 20)
+    _noscopeAllowedPanel = allowedScroll
+
+    local sepLine = vgui.Create("DPanel", win)
+    sepLine.Paint = function(self, w, h) fill(0, 0, w, h, C.border, 80) end
+
     local subLabel = vgui.Create("DPanel", win)
-    subLabel:SetPos(14, 40) subLabel:SetSize(W - 28, 32)
+    subLabel:SetSize(W - 28, 32)
     subLabel.Paint = function(self, w, h)
         local lines = wrapTextLines(DuckAch.L("admin.noscope_subtitle"), "DA_Tiny", w)
         for i, line in ipairs(lines) do
@@ -785,14 +939,40 @@ local function openNoscopeSettings()
         end
     end
 
-    local searchEntry = styledEntry(win, 14, 76, W - 28, 26, DuckAch.L("admin.noscope_search_placeholder"))
+    local searchEntry, searchEntryWrap = styledEntry(win, 14, 0, W - 28, 26, DuckAch.L("admin.noscope_search_placeholder"))
     searchEntry.OnValueChange = function(self) buildNoscopeRows(self:GetValue()) end
+    _noscopeSearchEntry = searchEntry
 
     local scroll = vgui.Create("DScrollPanel", win)
-    scroll:SetPos(14, 110)
-    scroll:SetSize(W - 28, H - 110 - 14 - 34)
     _noscopeListPanel = scroll
+
+    _noscopeRelayoutBelowAllowed = function(allowedH)
+        if not IsValid(win) then return end
+
+        local bottom = ALLOWED_Y + allowedH
+
+        if IsValid(sepLine) then
+            sepLine:SetPos(14, bottom + 4)
+            sepLine:SetSize(W - 28, 1)
+        end
+
+        local subY = bottom + 12
+        if IsValid(subLabel) then subLabel:SetPos(14, subY) end
+
+        local searchY = subY + 36
+        if IsValid(searchEntryWrap) then searchEntryWrap:SetPos(14, searchY) end
+
+        local listY = searchY + 34
+        if IsValid(scroll) then
+            scroll:SetPos(14, listY)
+            scroll:SetSize(W - 28, math.max(H - listY - 14 - 34, 60))
+        end
+    end
+
+    _noscopeRelayoutBelowAllowed(20)
+
     buildNoscopeRows("")
+    buildAllowedRows("")
 
     actionBtn(win, 14, H - 34, W - 28, 26, DuckAch.L("admin.noscope_save"), C.success, function()
         local list = {}
@@ -1006,5 +1186,6 @@ net.Receive("DuckAch.Admin.NoscopeWeapons.List", function()
         _noscopeSelected[class] = true
     end
 
-    buildNoscopeRows("")
+    buildNoscopeRows(currentNoscopeFilter())
+    buildAllowedRows(currentAllowedFilter())
 end)
