@@ -641,6 +641,11 @@ local function setupHooks()
 
         local WINDOW_TIME = 1.5
 
+        --// A real 360 flick rarely lands on exactly 360 degrees - a bit under
+        --// still reads as "a full spin" to a human, so this is intentionally
+        --// under 360 rather than requiring the literal full circle.
+        local REQUIRED_SPIN = 340
+
         hook.Add("PlayerTick", "AchievementSystem.Player.Track360Accumulate", function(ply)
             if not IsValid(ply) or not ply:Alive() then return end
 
@@ -693,7 +698,7 @@ local function setupHooks()
                     attacker:Nick(), victim:Nick(), accum
                 ))
 
-                if accum >= 360 then
+                if accum >= REQUIRED_SPIN then
                     local profile = GetProfile(attacker)
                     for _, ach in ipairs(GetByType("noscope_360_kill")) do
                         if not profile:hasAchievement(ach.id) then
